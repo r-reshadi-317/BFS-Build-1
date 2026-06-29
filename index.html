@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FBLA Banking & Financial Systems — National Study Platform</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">🏦</span>
+    <span>FBLA Banking &amp; Financial Systems</span>
+  </div>
+  <nav id="mainNav">
+    <button data-view="home" class="nav-btn active">Home</button>
+    <button data-view="study" class="nav-btn">Study Guide</button>
+    <button data-view="practice" class="nav-btn">Practice Tests</button>
+    <button data-view="flashcards" class="nav-btn">Flashcards</button>
+    <button data-view="formulas" class="nav-btn">Formula Sheet</button>
+    <button data-view="dashboard" class="nav-btn">Dashboard</button>
+    <button data-view="search" class="nav-btn">Search</button>
+    <button data-view="review" class="nav-btn">Review</button>
+    <button data-view="bookmarks" class="nav-btn">Bookmarks</button>
+    <button data-view="stats" class="nav-btn">Statistics</button>
+  </nav>
+  <button id="themeToggle" class="theme-toggle" title="Toggle dark mode">🌙</button>
+</header>
+
+<main id="app">
+  <!-- HOME -->
+  <section id="home" class="view active">
+    <h1>National Leadership Conference Prep</h1>
+    <p class="lead">An offline, expandable platform engineered for finalists.</p>
+    <div class="card-grid" id="homeStats"></div>
+    <div class="card-grid">
+      <div class="card clickable" data-goto="practice"><h3>📝 Practice Tests</h3><p>Scenario-based national-level questions.</p></div>
+      <div class="card clickable" data-goto="study"><h3>📚 Study Guide</h3><p>Deep dives into every domain.</p></div>
+      <div class="card clickable" data-goto="flashcards"><h3>🃏 Flashcards</h3><p>~200 tagged cards with spaced review.</p></div>
+      <div class="card clickable" data-goto="formulas"><h3>🧮 Formula Sheet</h3><p>Every banking ratio you must know.</p></div>
+    </div>
+  </section>
+
+  <!-- STUDY GUIDE -->
+  <section id="study" class="view">
+    <h1>Study Guide</h1>
+    <div class="layout-split">
+      <aside id="studyNav" class="sidebar"></aside>
+      <article id="studyContent" class="content-pane"></article>
+    </div>
+  </section>
+
+  <!-- PRACTICE -->
+  <section id="practice" class="view">
+    <h1>Practice Tests</h1>
+    <div id="practiceSetup" class="panel">
+      <h3>Build Your Test</h3>
+      <label>Category
+        <select id="filterCategory"></select>
+      </label>
+      <label>Difficulty
+        <select id="filterDifficulty">
+          <option value="all">All</option>
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+      </label>
+      <label>Number of Questions
+        <select id="filterCount">
+          <option>10</option><option>20</option><option>25</option><option>50</option><option value="all">All</option>
+        </select>
+      </label>
+      <button id="startTest" class="btn primary">Start Test</button>
+    </div>
+    <div id="quizArea" class="hidden"></div>
+  </section>
+
+  <!-- FLASHCARDS -->
+  <section id="flashcards" class="view">
+    <h1>Flashcards</h1>
+    <label>Filter by tag:
+      <select id="flashTag"></select>
+    </label>
+    <div id="flashcardStage"></div>
+    <div class="flash-controls">
+      <button id="flashPrev" class="btn">◀ Prev</button>
+      <button id="flashFlip" class="btn primary">Flip</button>
+      <button id="flashKnow" class="btn good">Know it</button>
+      <button id="flashDont" class="btn bad">Review</button>
+      <button id="flashNext" class="btn">Next ▶</button>
+    </div>
+  </section>
+
+  <!-- FORMULAS -->
+  <section id="formulas" class="view">
+    <h1>Formula Sheet</h1>
+    <div id="formulaList" class="card-grid"></div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="view">
+    <h1>Progress Dashboard</h1>
+    <div id="dashboardContent" class="card-grid"></div>
+  </section>
+
+  <!-- SEARCH -->
+  <section id="search" class="view">
+    <h1>Search</h1>
+    <input id="searchInput" type="text" placeholder="Search questions, tags, concepts..." />
+    <div id="searchResults"></div>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="review" class="view">
+    <h1>Review Incorrect Questions</h1>
+    <div id="reviewList"></div>
+  </section>
+
+  <!-- BOOKMARKS -->
+  <section id="bookmarks" class="view">
+    <h1>Bookmarks</h1>
+    <div id="bookmarkList"></div>
+  </section>
+
+  <!-- STATISTICS -->
+  <section id="stats" class="view">
+    <h1>Statistics</h1>
+    <div id="statsContent"></div>
+    <button id="resetProgress" class="btn bad">Reset All Progress</button>
+  </section>
+</main>
+
+<footer class="footer">Offline study build · Expandable architecture · v1.0</footer>
+
+<!-- Data layers load first, then logic -->
+<script src="questions.js"></script>
+<script src="studyGuide.js"></script>
+<script src="flashcards.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
