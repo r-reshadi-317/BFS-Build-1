@@ -2323,7 +2323,7 @@ const QUESTIONS = [
         formulaUsed: null,
         timeEstimate: 80,
         sourceConfidence: "High"
-    }
+    },
 
     /* ============================================================
        END EXPANSION PACK 02 — next pack continues at id:78
@@ -2339,6 +2339,636 @@ const QUESTIONS = [
        and spread across all categories per the research weights.
        Future prompts: append id:101, 102, ... here.
        DO NOT edit or renumber IDs 1–30 above.
+       ============================================================ */
+    /* ============================================================
+     EXPANSION PACK 03 — MIXED SCENARIO-BASED (ALL TOPICS)
+     IDs 78–97. Schema-identical to all prior questions.
+     DO NOT renumber. Future packs continue at id:98.
+     ============================================================ */
+
+  {
+        id: 78,
+        category: "Banking Regulations & Compliance",
+        subcategory: "Deposit Insurance",
+        tags: ["FDIC", "Deposit Insurance", "Trusts", "Ownership Categories", "Risk Management", "Scenario", "Estate Planning", "Consumer Banking"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["FDIC per-beneficiary trust coverage", "Multiple ownership categories", "Maximizing insured deposits"],
+        questionType: "scenario",
+        scenario: "A widower holds $250,000 in a single account, $250,000 in an IRA, and a revocable trust account naming his three children as equal beneficiaries with $600,000 in it — all at the same FDIC-insured bank.",
+        question: "Approximately how much of his total deposits is FDIC insured?",
+        choices: [
+            "$250,000, because it is all at one bank",
+            "$1,100,000 — $250k single + $250k retirement + $600k trust (3 beneficiaries × $250k cap covers it)",
+            "$750,000 — only three categories of $250,000 each",
+            "$1,350,000 — everything is automatically covered"
+        ],
+        answer: 1,
+        explanation: "FDIC coverage is per depositor, per bank, per ownership category. Single ($250k) and certain retirement accounts ($250k) are separate categories. A revocable trust is insured up to $250,000 PER beneficiary — three children allow up to $750,000, so the full $600,000 trust is covered. Total insured = $250k + $250k + $600k = $1,100,000.",
+        whyEachWrong: {
+            "0": "Coverage multiplies across ownership categories, not a flat $250k per bank.",
+            "2": "The trust category alone covers up to $750k (3 × $250k), so the $600k trust is fully insured — total exceeds $750k.",
+            "3": "$1,350,000 overstates; the trust is capped at $750k of potential coverage, and it only holds $600k."
+        },
+        commonTrap: "Forgetting that revocable trusts are insured per BENEFICIARY, dramatically expanding coverage beyond the basic $250,000.",
+        studyGuideReference: "fdic-coverage",
+        relatedQuestions: [4, 45],
+        formulaUsed: null,
+        timeEstimate: 95,
+        sourceConfidence: "High"
+    },
+    {
+        id: 79,
+        category: "Risk Management",
+        subcategory: "Asset-Liability Management",
+        tags: ["Risk Management", "Asset-Liability Management", "Interest Rate Risk", "Federal Reserve", "Monetary Policy", "Scenario", "Net Interest Margin", "Liquidity"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["Liability-sensitive bank", "Fed rate hikes", "Unrealized losses on bonds"],
+        questionType: "case study",
+        scenario: "A regional bank funded long-term, fixed-rate securities with uninsured short-term deposits. The Fed raises rates aggressively, the securities' market value drops, and large uninsured depositors begin withdrawing rapidly.",
+        question: "Which combination of risks is the bank facing, and what is the most immediate threat?",
+        choices: [
+            "Only credit risk; the immediate threat is borrower default",
+            "Interest rate risk AND liquidity risk; the immediate threat is a deposit run forcing sales of devalued securities at a loss",
+            "Only operational risk; the immediate threat is a system outage",
+            "Only compliance risk; the immediate threat is a missed CTR filing"
+        ],
+        answer: 1,
+        explanation: "Rising rates cut the market value of fixed-rate securities (interest rate risk). Funding those with flighty short-term/uninsured deposits creates liquidity risk. A run forces the bank to SELL devalued securities, turning unrealized losses into realized ones — the exact dynamic behind 2023 regional bank failures.",
+        whyEachWrong: {
+            "0": "Borrower default isn't the driver here; the problem is funding/rate mismatch.",
+            "2": "No system outage is described; the issue is balance-sheet structure.",
+            "3": "A reporting violation is unrelated to the run dynamic."
+        },
+        commonTrap: "Labeling every bank failure 'credit risk' instead of recognizing an interest-rate/liquidity mismatch.",
+        studyGuideReference: "risk-types",
+        relatedQuestions: [12, 73],
+        formulaUsed: "Repricing Gap = Rate-Sensitive Assets − Rate-Sensitive Liabilities",
+        timeEstimate: 95,
+        sourceConfidence: "High"
+    },
+    {
+        id: 80,
+        category: "Lending & Credit",
+        subcategory: "Debt Service Coverage",
+        tags: ["Lending", "Credit Analysis", "DSCR", "Commercial Banking", "Underwriting", "Scenario", "Math", "Risk Management"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["Debt Service Coverage Ratio", "Commercial underwriting", "NOI"],
+        questionType: "calculation",
+        scenario: "A commercial real estate borrower's property generates $180,000 in net operating income (NOI) annually. The proposed loan requires $150,000 in annual debt service. The bank's policy requires a minimum DSCR of 1.25.",
+        question: "What is the DSCR, and should the loan be approved on this criterion alone?",
+        choices: [
+            "1.20; approve, since it is close enough",
+            "1.20; deny, since it falls below the 1.25 minimum",
+            "0.83; deny, since the property loses money",
+            "1.25; approve, exactly meeting the threshold"
+        ],
+        answer: 1,
+        explanation: "DSCR = NOI / Debt Service = $180,000 / $150,000 = 1.20. The policy minimum is 1.25, so 1.20 falls short — the loan should be denied (or restructured) on this criterion. DSCR measures the cushion of income over required payments.",
+        whyEachWrong: {
+            "0": "'Close enough' violates the stated policy minimum of 1.25.",
+            "2": "0.83 inverts the formula; the property earns MORE than its debt service, so it isn't losing money.",
+            "3": "The result is 1.20, not 1.25; it does not meet the threshold."
+        },
+        commonTrap: "Inverting the ratio (debt service / NOI) or rounding 1.20 up to meet a hard policy floor.",
+        studyGuideReference: "credit-analysis",
+        relatedQuestions: [8, 69],
+        formulaUsed: "DSCR = Net Operating Income / Total Debt Service",
+        timeEstimate: 80,
+        sourceConfidence: "High"
+    },
+    {
+        id: 81,
+        category: "Banking Regulations & Compliance",
+        subcategory: "Consumer Protection Regs",
+        tags: ["Regulation E", "Regulation Z", "Consumer Banking", "Banking Regulations", "Fraud", "Scenario", "Compliance", "Customer Interaction"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "High",
+        concepts: ["Reg E vs Reg Z", "Liability timing", "Unauthorized transactions"],
+        questionType: "case study",
+        scenario: "A customer notices $900 of unauthorized DEBIT card charges on a statement she received 45 days ago but only reports them today. Separately, her CREDIT card was used fraudulently for $2,000, which she reports immediately.",
+        question: "Which statement about her maximum liability is correct?",
+        choices: [
+            "Debit: $50 max; Credit: $50 max",
+            "Debit: up to $500 under Reg E (reported after 2 days but within 60 days of statement); Credit: $0–$50 under Reg Z",
+            "Debit: $0; Credit: $2,000",
+            "Both are capped at $50 because all cards are treated identically"
+        ],
+        answer: 1,
+        explanation: "Reg E (debit) liability rises with delay: within 2 business days = $50; after 2 days but within 60 days of the statement = up to $500. Reporting at 45 days lands in the up-to-$500 tier. Reg Z (credit) caps liability at $50, and issuers commonly waive it ($0). Different regulations govern debit vs. credit.",
+        whyEachWrong: {
+            "0": "Debit liability is NOT $50 here because she missed the 2-business-day window.",
+            "2": "Credit liability is capped at $50 (often $0), not the full $2,000.",
+            "3": "Debit (Reg E) and credit (Reg Z) cards are governed by DIFFERENT rules and liability schedules."
+        },
+        commonTrap: "Applying credit-card protections (Reg Z) to a debit card (Reg E) and ignoring Reg E's escalating liability tiers.",
+        studyGuideReference: "consumer-regs",
+        relatedQuestions: [7, 75],
+        formulaUsed: null,
+        timeEstimate: 90,
+        sourceConfidence: "High"
+    },
+    {
+        id: 82,
+        category: "Federal Reserve & Monetary Policy",
+        subcategory: "Policy Transmission",
+        tags: ["Federal Reserve", "Monetary Policy", "Interest Rates", "Inflation", "Lending", "Scenario", "Economics", "Consumer Banking"],
+        difficulty: "Medium",
+        estimatedNationalFrequency: "High",
+        concepts: ["Contractionary policy effects", "Rate transmission to lending", "Cooling demand"],
+        questionType: "scenario",
+        scenario: "Inflation is running well above the Fed's 2% target. The FOMC raises its target range for the federal funds rate by 0.75%.",
+        question: "What is the most likely chain of effects on a typical commercial bank and its customers?",
+        choices: [
+            "Borrowing rates fall, loan demand rises, and inflation accelerates",
+            "Borrowing rates rise, loan demand cools, and consumer/business spending slows — easing inflation",
+            "Deposit rates immediately fall to zero and lending stops entirely",
+            "Nothing changes because banks ignore the federal funds rate"
+        ],
+        answer: 1,
+        explanation: "A higher fed funds rate pushes up the prime rate and other lending rates. Loans become costlier, dampening borrowing and spending, which cools aggregate demand and helps reduce inflation — the goal of contractionary policy.",
+        whyEachWrong: {
+            "0": "Raising rates does the opposite — it slows borrowing to fight inflation.",
+            "2": "Lending slows but does not stop; deposit rates often RISE with the funds rate.",
+            "3": "The funds rate strongly influences the prime rate and bank pricing."
+        },
+        commonTrap: "Reversing the direction — assuming a rate hike stimulates borrowing instead of restraining it.",
+        studyGuideReference: "fed-monetary",
+        relatedQuestions: [1, 71],
+        formulaUsed: null,
+        timeEstimate: 65,
+        sourceConfidence: "High"
+    },
+    {
+        id: 83,
+        category: "Banking Technology & Fintech",
+        subcategory: "Fraud & Authentication",
+        tags: ["Banking Technology", "Cybersecurity", "Fraud", "Multi-Factor Authentication", "Social Engineering", "Scenario", "Customer Interaction", "Risk Management"],
+        difficulty: "Medium",
+        estimatedNationalFrequency: "High",
+        concepts: ["Social engineering", "MFA bypass", "Authorized push payment fraud"],
+        questionType: "case study",
+        scenario: "A customer calls in a panic: a 'bank security officer' phoned her, said her account was hacked, and told her to read aloud the one-time passcode (OTP) texted to her phone to 'verify her identity.' She did, and money is now missing.",
+        question: "What occurred, and what is the key teaching point?",
+        choices: [
+            "An encryption failure; the bank's servers were breached",
+            "Social engineering that defeated MFA; legitimate institutions never ask customers to share OTPs",
+            "A tokenization error; the card numbers were exposed",
+            "Normal account behavior; no fraud occurred"
+        ],
+        answer: 1,
+        explanation: "The fraudster used social engineering to trick the customer into revealing her one-time passcode, defeating multi-factor authentication. MFA only works if the second factor stays secret — banks never ask customers to read back OTPs.",
+        whyEachWrong: {
+            "0": "No server/encryption breach occurred; the human was manipulated.",
+            "2": "Tokenization wasn't the failure point; the OTP was voluntarily disclosed.",
+            "3": "Unauthorized withdrawals following a scam call are clearly fraud."
+        },
+        commonTrap: "Assuming MFA is unbreakable; social engineering can bypass it when the user surrenders the second factor.",
+        studyGuideReference: "authentication-tech",
+        relatedQuestions: [25, 59],
+        formulaUsed: null,
+        timeEstimate: 70,
+        sourceConfidence: "High"
+    },
+    {
+        id: 84,
+        category: "Taxation in Banking",
+        subcategory: "Tax-Equivalent Yield",
+        tags: ["Taxation", "Municipal Bonds", "Tax-Equivalent Yield", "Investments", "Scenario", "Math", "Wealth Management", "Suitability"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "High",
+        concepts: ["Tax-equivalent yield comparison", "Choosing between bonds", "Marginal bracket"],
+        questionType: "calculation",
+        scenario: "A client in the 35% bracket is choosing between a tax-free municipal bond yielding 3.9% and a taxable corporate bond yielding 5.7%.",
+        question: "Which bond delivers the better after-tax return, and why?",
+        choices: [
+            "The corporate bond; its 5.7% is higher than 3.9%",
+            "The municipal bond; its tax-equivalent yield (~6.0%) exceeds the 5.7% taxable yield",
+            "They are identical after tax",
+            "The corporate bond; municipal interest is taxed at 35% too"
+        ],
+        answer: 1,
+        explanation: "Tax-Equivalent Yield = 3.9% / (1 − 0.35) = 0.039 / 0.65 = 6.0%. The muni's 6.0% tax-equivalent yield beats the taxable bond's 5.7%, so the muni is better after tax for this high-bracket investor.",
+        whyEachWrong: {
+            "0": "Comparing pre-tax yields ignores that the corporate bond's interest is taxed.",
+            "2": "After adjusting for taxes they are NOT identical — the muni wins.",
+            "3": "Municipal bond interest is generally exempt from federal income tax, not taxed at 35%."
+        },
+        commonTrap: "Comparing the muni's stated yield to the taxable yield directly without converting to a tax-equivalent basis.",
+        studyGuideReference: "tax-equivalent-yield",
+        relatedQuestions: [33, 38],
+        formulaUsed: "Tax-Equivalent Yield = Tax-Free Yield / (1 − Marginal Tax Rate)",
+        timeEstimate: 85,
+        sourceConfidence: "High"
+    },
+    {
+        id: 85,
+        category: "Ethics & Financial Literacy",
+        subcategory: "Privacy & Confidentiality",
+        tags: ["Ethics", "Privacy", "Gramm-Leach-Bliley", "Confidentiality", "Compliance", "Scenario", "Customer Interaction", "Banking Regulations"],
+        difficulty: "Medium",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["Customer confidentiality", "GLBA privacy", "Information sharing limits"],
+        questionType: "case study",
+        scenario: "A teller's friend asks, 'Can you just tell me my ex-boyfriend's account balance? We used to date and I think he owes me money.'",
+        question: "What is the correct response and the governing principle?",
+        choices: [
+            "Share the balance since they used to date",
+            "Refuse — customer financial information is confidential and protected under privacy law (GLBA); disclosing it would be a serious violation",
+            "Share it only if the balance is low",
+            "Ask a manager to share it informally"
+        ],
+        answer: 1,
+        explanation: "Customer financial data is confidential and protected under the Gramm-Leach-Bliley Act's privacy provisions. Disclosing account information to an unauthorized third party is both unethical and a legal violation, regardless of any personal relationship.",
+        whyEachWrong: {
+            "0": "A past relationship gives no right to another person's financial data.",
+            "2": "The balance amount is irrelevant; disclosure itself is prohibited.",
+            "3": "Routing it through a manager does not make unauthorized disclosure permissible."
+        },
+        commonTrap: "Believing personal relationships or 'small' disclosures create exceptions to privacy obligations.",
+        studyGuideReference: "banking-ethics",
+        relatedQuestions: [76, 49],
+        formulaUsed: null,
+        timeEstimate: 60,
+        sourceConfidence: "High"
+    },
+    {
+        id: 86,
+        category: "Financial Statements & Ratios",
+        subcategory: "Profitability Analysis",
+        tags: ["Financial Ratios", "ROE", "ROA", "Leverage", "Commercial Banking", "Scenario", "Math", "Bank Analysis"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["DuPont relationship", "ROE vs ROA", "Leverage multiplier"],
+        questionType: "calculation",
+        scenario: "Bank A and Bank B both earn a 1.0% ROA. Bank A has $10 of assets per $1 of equity; Bank B has $12 of assets per $1 of equity.",
+        question: "Which bank has the higher ROE, and what does this reveal?",
+        choices: [
+            "Bank A, because lower leverage always means higher returns",
+            "Bank B, with ~12% ROE vs. Bank A's ~10% — higher leverage amplifies ROE but also risk",
+            "They are equal because their ROA is identical",
+            "Bank A, with ~10% ROE; leverage has no effect on ROE"
+        ],
+        answer: 1,
+        explanation: "ROE = ROA × (Assets/Equity). Bank A: 1.0% × 10 = 10%. Bank B: 1.0% × 12 = 12%. Greater leverage (more assets per dollar of equity) amplifies ROE — but it also increases risk and reduces the loss-absorbing capital cushion.",
+        whyEachWrong: {
+            "0": "Lower leverage does not 'always' raise returns; here it produces a LOWER ROE.",
+            "2": "Equal ROA does not mean equal ROE when leverage differs.",
+            "3": "Leverage clearly affects ROE via the equity multiplier."
+        },
+        commonTrap: "Assuming identical ROA means identical ROE — leverage (the equity multiplier) drives them apart.",
+        studyGuideReference: "bank-ratios",
+        relatedQuestions: [10, 30],
+        formulaUsed: "ROE = ROA × (Total Assets / Equity)",
+        timeEstimate: 90,
+        sourceConfidence: "High"
+    },
+    {
+        id: 87,
+        category: "Banking Regulations & Compliance",
+        subcategory: "AML / BSA",
+        tags: ["BSA", "AML", "SAR", "Structuring", "Compliance", "Scenario", "Ethics", "Customer Interaction"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "High",
+        concepts: ["Suspicious Activity Report", "Tipping-off prohibition", "Confidentiality of SARs"],
+        questionType: "case study",
+        scenario: "A banker notices a customer making frequent just-under-$10,000 cash deposits across multiple branches. The customer asks the banker directly, 'Are you reporting me to the government?'",
+        question: "What should the banker do regarding reporting AND the customer's question?",
+        choices: [
+            "File a SAR and confirm to the customer that a report was filed",
+            "File a SAR and do NOT disclose it — 'tipping off' a subject about a SAR is prohibited by law",
+            "File nothing, since each deposit is under $10,000",
+            "Tell the customer to spread deposits across more banks to avoid scrutiny"
+        ],
+        answer: 1,
+        explanation: "Repeated sub-$10,000 cash deposits suggest illegal structuring, warranting a SAR. Critically, banks and employees are legally PROHIBITED from disclosing ('tipping off') that a SAR has been filed. The banker must file but must not confirm it to the customer.",
+        whyEachWrong: {
+            "0": "Confirming a SAR is illegal tipping-off.",
+            "2": "Structuring is suspicious regardless of each amount being under $10,000.",
+            "3": "Advising evasion is itself a crime and a severe ethics breach."
+        },
+        commonTrap: "Not knowing that the very existence of a SAR is confidential and cannot be disclosed to the customer.",
+        studyGuideReference: "aml-bsa",
+        relatedQuestions: [6, 49],
+        formulaUsed: null,
+        timeEstimate: 90,
+        sourceConfidence: "High"
+    },
+    {
+        id: 88,
+        category: "Consumer Banking & Deposit Products",
+        subcategory: "Product Suitability",
+        tags: ["Consumer Banking", "Deposit Products", "CD", "Liquidity", "Financial Literacy", "Scenario", "Customer Interaction", "Suitability"],
+        difficulty: "Medium",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["Liquidity needs", "Emergency fund", "Early withdrawal penalty"],
+        questionType: "case study",
+        scenario: "A customer says: 'This is my emergency fund. I might need it at any moment, but I also want the highest possible interest rate.' A banker is tempted to recommend a 5-year CD with the best rate.",
+        question: "What is the most appropriate recommendation and why?",
+        choices: [
+            "A 5-year CD, because it has the highest rate",
+            "A liquid option (high-yield savings or money market account), because emergency funds must remain accessible without penalty",
+            "Put it all in long-term stocks for maximum growth",
+            "A 5-year CD, since early withdrawal penalties are rare"
+        ],
+        answer: 1,
+        explanation: "An emergency fund's defining requirement is LIQUIDITY — accessible without loss or penalty. A 5-year CD locks funds and imposes early-withdrawal penalties, conflicting with the stated need. A high-yield savings or money market account balances modest yield with accessibility.",
+        whyEachWrong: {
+            "0": "A 5-year CD sacrifices the liquidity that an emergency fund requires.",
+            "2": "Stocks are volatile and unsuitable for funds needed at a moment's notice.",
+            "3": "Early-withdrawal penalties on CDs are standard, not rare."
+        },
+        commonTrap: "Chasing the highest yield while ignoring the customer's overriding need for liquidity.",
+        studyGuideReference: "deposit-products",
+        relatedQuestions: [18, 76],
+        formulaUsed: null,
+        timeEstimate: 60,
+        sourceConfidence: "High"
+    },
+    {
+        id: 89,
+        category: "International Banking",
+        subcategory: "Trade Finance",
+        tags: ["International Banking", "Trade Finance", "Letter of Credit", "Commercial Banking", "Risk Management", "Scenario", "Payments", "Customer Interaction"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "Low",
+        concepts: ["Letter of credit", "Reducing counterparty risk", "Documentary compliance"],
+        questionType: "case study",
+        scenario: "A U.S. exporter is nervous about shipping goods to a new overseas buyer it has never dealt with, fearing it won't get paid. The buyer is equally worried about paying before the goods ship.",
+        question: "Which banking instrument best resolves this mutual distrust, and how?",
+        choices: [
+            "A wire transfer sent in advance by the exporter",
+            "A letter of credit — the buyer's bank guarantees payment to the exporter upon presentation of compliant shipping documents",
+            "An ACH debit pulled from the buyer's account",
+            "A personal check mailed after delivery"
+        ],
+        answer: 1,
+        explanation: "A letter of credit (LC) substitutes the creditworthiness of the buyer's bank for the buyer. The bank pays the exporter once compliant documents (proving shipment) are presented, protecting the exporter from non-payment and the buyer from paying before shipment.",
+        whyEachWrong: {
+            "0": "The exporter sending a wire gives no payment assurance to the exporter at all.",
+            "2": "An ACH debit is domestic and offers no shipment-linked guarantee.",
+            "3": "A mailed personal check carries high risk and no bank guarantee."
+        },
+        commonTrap: "Confusing a letter of credit (bank payment guarantee tied to documents) with a simple wire or check.",
+        studyGuideReference: "intl-payments",
+        relatedQuestions: [17, 72],
+        formulaUsed: null,
+        timeEstimate: 80,
+        sourceConfidence: "Medium"
+    },
+    {
+        id: 90,
+        category: "Banking Technology & Fintech",
+        subcategory: "AI & Fair Lending",
+        tags: ["Banking Technology", "Artificial Intelligence", "Fair Lending", "ECOA", "Ethics", "Scenario", "Credit Scoring", "Compliance"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["Adverse action notice", "Model explainability", "Disparate impact"],
+        questionType: "case study",
+        scenario: "A bank's AI model denies a consumer's loan. When the applicant asks why, the bank cannot explain which factors drove the decision because the model is a 'black box.'",
+        question: "What compliance problem does this create?",
+        choices: [
+            "None — AI decisions are exempt from explanation requirements",
+            "ECOA requires lenders to provide specific reasons for adverse action; an unexplainable model can violate this and risk disparate-impact discrimination",
+            "The bank must approve the loan instead",
+            "Only a problem if the applicant sues"
+        ],
+        answer: 1,
+        explanation: "Under ECOA/Reg B, lenders must give applicants specific principal reasons for adverse action (denial). A black-box model that can't explain its decision undermines this requirement and raises disparate-impact concerns — which is why explainability is essential in lending AI.",
+        whyEachWrong: {
+            "0": "AI decisions are NOT exempt; adverse-action requirements still apply.",
+            "2": "The bank isn't forced to approve; it must be able to justify decisions lawfully.",
+            "3": "The violation exists regardless of whether anyone sues."
+        },
+        commonTrap: "Assuming using AI removes a lender's obligation to explain credit denials.",
+        studyGuideReference: "ai-banking",
+        relatedQuestions: [55, 21],
+        formulaUsed: null,
+        timeEstimate: 85,
+        sourceConfidence: "High"
+    },
+    {
+        id: 91,
+        category: "Lending & Credit",
+        subcategory: "Credit Utilization",
+        tags: ["Lending", "Credit Score", "Credit Utilization", "Consumer Banking", "Financial Literacy", "Scenario", "Math", "FICO"],
+        difficulty: "Medium",
+        estimatedNationalFrequency: "High",
+        concepts: ["Credit utilization ratio", "Improving FICO", "Available credit"],
+        questionType: "calculation",
+        scenario: "A customer has total credit card limits of $20,000 and carries balances totaling $13,000. She wants to improve her credit score before applying for a mortgage.",
+        question: "What is her current utilization, and what is the most effective quick action?",
+        choices: [
+            "65%; close her unused cards immediately",
+            "65%; pay down balances to lower utilization (ideally under 30%), since high utilization hurts the score",
+            "35%; utilization doesn't affect scores",
+            "13%; she should max out the cards to build history"
+        ],
+        answer: 1,
+        explanation: "Utilization = Balances / Limits = $13,000 / $20,000 = 65%, which is high. Since amounts owed/utilization is ~30% of a FICO score, paying balances down (ideally below 30% utilization) is among the fastest ways to improve her score. Closing cards REDUCES available limits and can RAISE utilization.",
+        whyEachWrong: {
+            "0": "Closing cards lowers total limits, which can increase utilization and hurt the score.",
+            "2": "65% is correct math, but utilization strongly affects scores.",
+            "3": "13% miscalculates, and maxing cards raises utilization, harming the score."
+        },
+        commonTrap: "Thinking closing unused cards helps — it often hurts by shrinking available credit and raising utilization.",
+        studyGuideReference: "credit-scoring",
+        relatedQuestions: [19, 68],
+        formulaUsed: "Credit Utilization = Total Balances / Total Credit Limits",
+        timeEstimate: 70,
+        sourceConfidence: "High"
+    },
+    {
+        id: 92,
+        category: "Taxation in Banking",
+        subcategory: "Retirement Planning",
+        tags: ["Taxation", "Roth IRA", "Traditional IRA", "Retirement", "Scenario", "Tax Planning", "Customer Interaction", "Financial Literacy"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "High",
+        concepts: ["Required minimum distributions", "Roth tax-free withdrawals", "Bracket planning"],
+        questionType: "case study",
+        scenario: "A 30-year-old in a low tax bracket wants to (a) minimize lifetime taxes and (b) avoid forced withdrawals during retirement. He asks whether a Traditional or Roth IRA fits better.",
+        question: "Which recommendation best satisfies BOTH goals?",
+        choices: [
+            "Traditional IRA, because the upfront deduction is most valuable now",
+            "Roth IRA, because he pays tax now at a low rate, withdrawals are tax-free, and Roth IRAs have no required minimum distributions for the original owner",
+            "Neither, since IRAs always force withdrawals",
+            "Traditional IRA, because Roth accounts require withdrawals at 73"
+        ],
+        answer: 1,
+        explanation: "A Roth IRA suits a young, low-bracket saver: he pays tax now at a low rate, growth and qualified withdrawals are tax-free, and original-owner Roth IRAs are NOT subject to required minimum distributions (RMDs) during the owner's lifetime — satisfying both goals.",
+        whyEachWrong: {
+            "0": "An upfront deduction is most valuable in a HIGH bracket; he is currently low.",
+            "2": "Roth IRAs do not force lifetime RMDs on the original owner.",
+            "3": "It's the TRADITIONAL IRA that imposes RMDs (around age 73), not the Roth."
+        },
+        commonTrap: "Believing all IRAs require minimum distributions — original-owner Roth IRAs do not during the owner's life.",
+        studyGuideReference: "tax-advantaged-accounts",
+        relatedQuestions: [34, 44],
+        formulaUsed: null,
+        timeEstimate: 85,
+        sourceConfidence: "High"
+    },
+    {
+        id: 93,
+        category: "Financial Statements & Ratios",
+        subcategory: "Asset Quality",
+        tags: ["Financial Ratios", "Asset Quality", "Loan Loss Provision", "Risk Management", "Commercial Banking", "Scenario", "Bank Analysis", "Credit Risk"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["Non-performing loans", "Allowance for loan losses", "Asset quality deterioration"],
+        questionType: "case study",
+        scenario: "A bank's ratio of non-performing loans to total loans jumps from 1% to 4% in one year, and it sharply increases its loan-loss provisions.",
+        question: "What does this most likely indicate about the bank?",
+        choices: [
+            "Improving asset quality and rising profits",
+            "Deteriorating asset quality — more borrowers are defaulting, signaling rising credit risk and pressure on earnings",
+            "A liquidity surplus with no downside",
+            "A regulatory reward for strong performance"
+        ],
+        answer: 1,
+        explanation: "A rising non-performing-loan ratio means more loans are in default or seriously delinquent — deteriorating asset quality and rising credit risk. Higher loan-loss provisions reduce reported earnings as the bank sets aside funds for expected losses.",
+        whyEachWrong: {
+            "0": "Rising NPLs and higher provisions indicate WORSENING, not improving, quality.",
+            "2": "This is a credit-quality problem, not a benign liquidity surplus.",
+            "3": "Regulators view rising NPLs as a warning sign, not a reward."
+        },
+        commonTrap: "Interpreting higher loan-loss provisions as a positive when they signal expected credit deterioration.",
+        studyGuideReference: "bank-ratios",
+        relatedQuestions: [12, 30],
+        formulaUsed: "NPL Ratio = Non-Performing Loans / Total Loans",
+        timeEstimate: 80,
+        sourceConfidence: "High"
+    },
+    {
+        id: 94,
+        category: "Banking Technology & Fintech",
+        subcategory: "Payments",
+        tags: ["Banking Technology", "FedNow", "Real-Time Payments", "Wire Transfer", "Fraud", "Scenario", "Customer Interaction", "Risk Management"],
+        difficulty: "Medium",
+        estimatedNationalFrequency: "High",
+        concepts: ["Irrevocability of instant payments", "Authorized push payment fraud", "Payment finality"],
+        questionType: "case study",
+        scenario: "A customer is tricked by a scammer into sending an instant payment via a real-time payment network. Minutes later she realizes it was fraud and demands the bank 'reverse it like a credit card charge.'",
+        question: "What is the key issue the banker must explain?",
+        choices: [
+            "Instant payments are easily reversible, so the funds will return automatically",
+            "Real-time payments are typically irrevocable and settle immediately — unlike card chargebacks, there is usually no built-in reversal, which is why verifying the recipient first is critical",
+            "The bank can simply cancel the transaction within 60 days",
+            "FDIC insurance will refund the lost money"
+        ],
+        answer: 1,
+        explanation: "Real-time payments (FedNow/RTP) settle instantly and are generally irrevocable — there is no guaranteed reversal like a credit-card chargeback. This 'authorized push payment' fraud is hard to recover, underscoring why customers must verify recipients before sending.",
+        whyEachWrong: {
+            "0": "Instant payments are typically NOT easily reversible.",
+            "2": "There is no general 60-day cancellation right for completed instant payments.",
+            "3": "FDIC insurance covers bank failure, not customer-authorized fraudulent transfers."
+        },
+        commonTrap: "Assuming instant payments carry the same chargeback/reversal rights as credit cards.",
+        studyGuideReference: "payments-tech",
+        relatedQuestions: [51, 83],
+        formulaUsed: null,
+        timeEstimate: 70,
+        sourceConfidence: "High"
+    },
+    {
+        id: 95,
+        category: "Ethics & Financial Literacy",
+        subcategory: "Sales Practices",
+        tags: ["Ethics", "Sales Practices", "Unauthorized Accounts", "Compliance", "Consumer Banking", "Scenario", "Customer Interaction", "Fair Banking"],
+        difficulty: "Medium",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["Cross-selling abuse", "Unauthorized account opening", "Sales-pressure culture"],
+        questionType: "case study",
+        scenario: "A bank sets aggressive sales quotas. To hit targets, an employee opens additional accounts and credit cards for customers WITHOUT their knowledge or consent.",
+        question: "How should this practice be characterized?",
+        choices: [
+            "Smart cross-selling that benefits customers",
+            "A serious ethical and legal violation (consumer harm, fraud) that exposes the bank to enforcement actions and reputational damage",
+            "Acceptable as long as no fees are charged",
+            "A minor paperwork issue with no consequences"
+        ],
+        answer: 1,
+        explanation: "Opening accounts without consent is fraud and a major consumer-protection violation. It harms customers (fees, credit impact), breaches ethics, and exposes the bank to severe regulatory penalties and lasting reputational damage — as seen in real high-profile enforcement cases.",
+        whyEachWrong: {
+            "0": "Legitimate cross-selling requires informed customer consent.",
+            "2": "Even fee-free unauthorized accounts are fraudulent and can harm credit.",
+            "3": "Such practices have led to massive fines and reputational fallout."
+        },
+        commonTrap: "Excusing unauthorized accounts as harmless 'cross-selling' rather than recognizing them as fraud.",
+        studyGuideReference: "banking-ethics",
+        relatedQuestions: [76, 85],
+        formulaUsed: null,
+        timeEstimate: 65,
+        sourceConfidence: "High"
+    },
+    {
+        id: 96,
+        category: "Federal Reserve & Monetary Policy",
+        subcategory: "Quantitative Easing",
+        tags: ["Federal Reserve", "Monetary Policy", "Quantitative Easing", "Open Market Operations", "Interest Rates", "Scenario", "Economics", "Money Supply"],
+        difficulty: "Hard",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["Quantitative easing", "Large-scale asset purchases", "Zero lower bound"],
+        questionType: "scenario",
+        scenario: "During a severe downturn, the Fed has already cut the federal funds rate to near zero but the economy still needs more stimulus. It begins large-scale purchases of long-term Treasuries and mortgage-backed securities.",
+        question: "What is this policy called, and what is its primary goal?",
+        choices: [
+            "Contractionary policy; to slow inflation",
+            "Quantitative easing (QE); to lower long-term rates and inject liquidity when short-term rates are already near zero",
+            "Reserve-requirement tightening; to reduce lending",
+            "Fiscal stimulus; enacted by Congress"
+        ],
+        answer: 1,
+        explanation: "Quantitative easing (QE) is large-scale asset purchases used when the policy rate is already near the zero lower bound. By buying long-term securities, the Fed lowers long-term rates, raises asset prices, and injects liquidity to stimulate the economy further.",
+        whyEachWrong: {
+            "0": "QE is expansionary stimulus, not contractionary.",
+            "2": "QE expands liquidity; it doesn't tighten reserve requirements.",
+            "3": "QE is monetary policy (the Fed), not congressional fiscal policy."
+        },
+        commonTrap: "Confusing QE (expansionary asset purchases) with routine OMO or with fiscal stimulus.",
+        studyGuideReference: "fed-monetary",
+        relatedQuestions: [1, 82],
+        formulaUsed: null,
+        timeEstimate: 80,
+        sourceConfidence: "High"
+    },
+    {
+        id: 97,
+        category: "Consumer Banking & Deposit Products",
+        subcategory: "Overdraft & Funds Availability",
+        tags: ["Consumer Banking", "Regulation E", "Overdraft", "Regulation CC", "Banking Regulations", "Scenario", "Customer Interaction", "Compliance"],
+        difficulty: "Medium",
+        estimatedNationalFrequency: "Medium",
+        concepts: ["Overdraft opt-in", "Reg E overdraft rules", "Funds availability holds"],
+        questionType: "case study",
+        scenario: "A customer is upset about a $35 overdraft fee on a debit-card point-of-sale purchase. She says she never agreed to overdraft coverage on debit transactions.",
+        question: "Which rule is most relevant, and what does it require?",
+        choices: [
+            "Reg Z; banks may charge any overdraft fee without consent",
+            "Reg E; banks must obtain the customer's affirmative opt-in BEFORE charging overdraft fees on one-time debit/ATM transactions",
+            "Reg DD; overdrafts are never permitted",
+            "Reg CC; overdraft fees are based on check hold times"
+        ],
+        answer: 1,
+        explanation: "Under Regulation E's overdraft provisions, banks must obtain a customer's affirmative consent ('opt-in') before charging overdraft fees on one-time debit-card and ATM transactions. If she never opted in, the fee on a POS debit purchase may be improper.",
+        whyEachWrong: {
+            "0": "Reg Z governs credit disclosures, and consent IS required for debit overdraft fees.",
+            "2": "Reg DD covers savings disclosures; overdrafts aren't categorically banned.",
+            "3": "Reg CC governs funds availability/check holds, not overdraft opt-in."
+        },
+        commonTrap: "Forgetting that one-time debit/ATM overdraft fees require an affirmative customer opt-in under Reg E.",
+        studyGuideReference: "consumer-regs",
+        relatedQuestions: [7, 75],
+        formulaUsed: null,
+        timeEstimate: 70,
+        sourceConfidence: "High"
+    }
+
+    /* ============================================================
+       END EXPANSION PACK 03 — next pack continues at id:98
        ============================================================ */
 ];
 
