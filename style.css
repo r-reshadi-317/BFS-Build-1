@@ -455,6 +455,27 @@ input[type=text] {
     margin: .6rem 0;
 }
 
+.formula-rating {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .75rem;
+    color: var(--muted);
+    font-size: .85rem;
+    margin-top: .9rem;
+}
+
+.formula-rating strong {
+    color: var(--primary);
+    white-space: nowrap;
+}
+
+.formula-slider {
+    width: 100%;
+    accent-color: var(--primary);
+    margin-top: .45rem;
+}
+
 @media (max-width: 760px) {
     .layout-split {
         grid-template-columns: 1fr;

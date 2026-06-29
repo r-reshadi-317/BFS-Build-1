@@ -32,6 +32,7 @@
     bindTheme();
     bindPractice();
     bindFlashcards();
+    bindFormulas();
     bindSearch();
     bindReset();
     renderCategoryFilters();
@@ -54,6 +55,7 @@
       bookmarks: [],
       flashKnown: [],
       flashReview: [],
+      formulaKnowledge: {},
       testsTaken: 0,
       totalCorrect: 0,
       totalAnswered: 0
@@ -382,9 +384,28 @@
 
   function renderFormulas() {
     const formulas = unique(questions.map(function (question) { return question.formulaUsed; }).filter(Boolean));
-    $("#formulaList").innerHTML = formulas.map(function (formula) {
-      return '<div class="card"><h3>Formula</h3><p class="formula">' + escapeHtml(formula) + '</p></div>';
+    $("#formulaList").innerHTML = formulas.map(function (formula, index) {
+      const rating = Number(state.progress.formulaKnowledge[formula] || 0);
+      return '<div class="card formula-card"><h3>Formula</h3><p class="formula">' + escapeHtml(formula) + '</p>'
+        + '<label class="formula-rating" for="formulaRating' + index + '">'
+        + '<span>Knowledge rating</span>'
+        + '<strong data-formula-value="' + escapeAttr(formula) + '">' + rating + ' / 10</strong>'
+        + '</label>'
+        + '<input id="formulaRating' + index + '" class="formula-slider" type="range" min="0" max="10" step="1" value="' + rating + '" data-formula-key="' + escapeAttr(formula) + '" />'
+        + '</div>';
     }).join("") || '<div class="panel">No formulas found.</div>';
+  }
+
+  function bindFormulas() {
+    $("#formulaList").addEventListener("input", function (event) {
+      if (!event.target.classList.contains("formula-slider")) return;
+      const formula = event.target.dataset.formulaKey;
+      const rating = Number(event.target.value);
+      state.progress.formulaKnowledge[formula] = rating;
+      const output = $("[data-formula-value]", event.target.closest(".formula-card"));
+      if (output) output.textContent = rating + " / 10";
+      saveProgress();
+    });
   }
 
   function bindSearch() {
@@ -456,6 +477,10 @@
   function renderStats() {
     const answered = state.progress.totalAnswered;
     const accuracy = answered ? Math.round((state.progress.totalCorrect / answered) * 100) : 0;
+    const formulaRatings = Object.values(state.progress.formulaKnowledge).map(Number);
+    const formulaAverage = formulaRatings.length
+      ? (formulaRatings.reduce(function (sum, rating) { return sum + rating; }, 0) / formulaRatings.length).toFixed(1)
+      : "0.0";
     $("#statsContent").innerHTML = '<div class="card-grid">'
       + statCard("Tests Taken", state.progress.testsTaken)
       + statCard("Answers Submitted", answered)
@@ -463,6 +488,7 @@
       + statCard("Lifetime Accuracy", accuracy + "%")
       + statCard("Known Flashcards", state.progress.flashKnown.length)
       + statCard("Flashcards To Review", state.progress.flashReview.length)
+      + statCard("Avg Formula Rating", formulaAverage + " / 10")
       + '</div>';
   }
 
@@ -473,6 +499,7 @@
       state.progress = loadProgress();
       saveProgress();
       renderFlashcard();
+      renderFormulas();
     });
   }
 
