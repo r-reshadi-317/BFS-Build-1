@@ -10,6 +10,7 @@
     currentView: "home",
     quiz: [],
     quizAnswers: {},
+    quizScored: false,
     flashIndex: 0,
     flashFlipped: false,
     flashDeck: flashcards,
@@ -162,6 +163,7 @@
     pool = shuffle(pool);
     state.quiz = countValue === "all" ? pool : pool.slice(0, Number(countValue));
     state.quizAnswers = {};
+    state.quizScored = false;
     $("#practiceSetup").classList.add("hidden");
     $("#quizArea").classList.remove("hidden");
     renderQuiz();
@@ -175,7 +177,15 @@
       return;
     }
 
-    quizArea.innerHTML = state.quiz.map(renderQuestion).join("")
+    const answered = Object.keys(state.quizAnswers).length;
+    const correct = state.quiz.filter(function (question) {
+      return state.quizAnswers[question.id] === question.answer;
+    }).length;
+    const banner = state.quizScored
+      ? '<div class="result-banner">' + correct + ' / ' + state.quiz.length + ' correct (' + answered + ' answered)</div>'
+      : "";
+
+    quizArea.innerHTML = banner + state.quiz.map(renderQuestion).join("")
       + '<div class="panel"><button class="btn primary" data-action="score-test">Score Test</button> '
       + '<button class="btn" data-action="new-test">New Test</button></div>';
     bindQuizActions(quizArea);
@@ -184,6 +194,7 @@
   function renderQuestion(question, index) {
     const chosen = state.quizAnswers[question.id];
     const answered = typeof chosen !== "undefined";
+    const scored = state.quizScored;
     const isBookmarked = state.progress.bookmarks.includes(question.id);
 
     return '<div class="question-block" data-question-id="' + question.id + '">'
@@ -193,11 +204,12 @@
       + '<h3>' + escapeHtml(question.question) + '</h3>'
       + question.choices.map(function (choice, choiceIndex) {
         let className = "choice";
-        if (answered && choiceIndex === question.answer) className += " correct";
-        if (answered && choiceIndex === chosen && choiceIndex !== question.answer) className += " wrong";
-        return '<button class="' + className + '" data-action="answer" data-question-id="' + question.id + '" data-choice="' + choiceIndex + '"' + (answered ? " disabled" : "") + ">" + escapeHtml(choice) + "</button>";
+        if (!scored && answered && choiceIndex === chosen) className += " selected";
+        if (scored && choiceIndex === question.answer) className += " correct";
+        if (scored && answered && choiceIndex === chosen && choiceIndex !== question.answer) className += " wrong";
+        return '<button class="' + className + '" data-action="answer" data-question-id="' + question.id + '" data-choice="' + choiceIndex + '"' + (scored ? " disabled" : "") + ">" + escapeHtml(choice) + "</button>";
       }).join("")
-      + (answered ? renderExplanation(question, chosen) : "")
+      + (scored ? renderExplanation(question, chosen) : "")
       + renderTags(question.tags)
       + '</div>';
   }
@@ -221,36 +233,36 @@
         $("#practiceSetup").classList.remove("hidden");
         $("#quizArea").classList.add("hidden");
         $("#quizArea").innerHTML = "";
+        state.quizScored = false;
       }
     }, { once: true });
   }
 
   function answerQuestion(questionId, choiceIndex) {
-    if (typeof state.quizAnswers[questionId] !== "undefined") return;
-    const question = questions.find(function (item) { return item.id === questionId; });
+    if (state.quizScored) return;
     state.quizAnswers[questionId] = choiceIndex;
-    state.progress.answered[questionId] = choiceIndex === question.answer;
-    state.progress.totalAnswered += 1;
-
-    if (choiceIndex === question.answer) {
-      state.progress.totalCorrect += 1;
-      state.progress.incorrect = state.progress.incorrect.filter(function (id) { return id !== questionId; });
-    } else if (!state.progress.incorrect.includes(questionId)) {
-      state.progress.incorrect.push(questionId);
-    }
-
-    saveProgress();
     renderQuiz();
   }
 
   function scoreTest() {
-    const answered = Object.keys(state.quizAnswers).length;
-    const correct = state.quiz.filter(function (question) {
-      return state.quizAnswers[question.id] === question.answer;
-    }).length;
+    if (state.quizScored) return;
+    state.quizScored = true;
     state.progress.testsTaken += 1;
+    state.quiz.forEach(function (question) {
+      if (!(question.id in state.quizAnswers)) return;
+      const isCorrect = state.quizAnswers[question.id] === question.answer;
+      state.progress.answered[question.id] = isCorrect;
+      state.progress.totalAnswered += 1;
+
+      if (isCorrect) {
+        state.progress.totalCorrect += 1;
+        state.progress.incorrect = state.progress.incorrect.filter(function (id) { return id !== question.id; });
+      } else if (!state.progress.incorrect.includes(question.id)) {
+        state.progress.incorrect.push(question.id);
+      }
+    });
     saveProgress();
-    $("#quizArea").insertAdjacentHTML("afterbegin", '<div class="result-banner">' + correct + ' / ' + state.quiz.length + ' correct (' + answered + ' answered)</div>');
+    renderQuiz();
   }
 
   function renderExplanation(question, chosen) {

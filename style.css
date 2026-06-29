@@ -325,6 +325,13 @@ input[type=text] {
     border-color: var(--primary);
 }
 
+.choice.selected {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+}
+
 .choice.correct {
     background: #d8f3e3;
     border-color: var(--good);
