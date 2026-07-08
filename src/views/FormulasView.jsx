@@ -1,17 +1,19 @@
-import { unique } from "../utils/helpers.js";
 import { PageHeader } from "../components/PageHeader.jsx";
 
-export function FormulasView({ activeSetName, questions, progress, saveProgress }) {
-  const formulas = unique(questions.map((q) => q.formulaUsed).filter(Boolean));
+function formulaRatingKey(entry) {
+  return entry.id || entry.formula;
+}
 
-  function updateRating(formula, rating) {
+export function FormulasView({ activeSetName, formulaSheet, progress, saveProgress }) {
+  function updateRating(entry, rating) {
+    const key = formulaRatingKey(entry);
     saveProgress((prev) => ({
       ...prev,
-      formulaKnowledge: { ...prev.formulaKnowledge, [formula]: rating },
+      formulaKnowledge: { ...prev.formulaKnowledge, [key]: rating },
     }));
   }
 
-  if (!formulas.length) {
+  if (!formulaSheet.length) {
     return (
       <section className="view active">
         <PageHeader activeSetName={activeSetName} title="Formula Sheet" />
@@ -29,12 +31,24 @@ export function FormulasView({ activeSetName, questions, progress, saveProgress 
       />
 
       <div className="card-grid">
-        {formulas.map((formula) => {
-          const rating = Number(progress.formulaKnowledge[formula] || 0);
+        {formulaSheet.map((entry) => {
+          const key = formulaRatingKey(entry);
+          const rating = Number(progress.formulaKnowledge[key] || 0);
           return (
-            <div key={formula} className="card formula-card">
-              <h3>Formula</h3>
-              <p className="formula">{formula}</p>
+            <div key={key} className="card formula-card">
+              <h3>{entry.name || "Formula"}</h3>
+              {entry.category && entry.category !== "General" && (
+                <p className="formula-category muted">{entry.category}</p>
+              )}
+              <p className="formula">{entry.formula}</p>
+              {entry.description && <p className="formula-description">{entry.description}</p>}
+              {entry.tags?.length > 0 && (
+                <div className="tag-list">
+                  {entry.tags.map((tag) => (
+                    <span key={tag} className="tag">{tag}</span>
+                  ))}
+                </div>
+              )}
               <label className="formula-rating">
                 <span>Knowledge rating</span>
                 <strong>{rating} / 10</strong>
@@ -46,8 +60,8 @@ export function FormulasView({ activeSetName, questions, progress, saveProgress 
                 max="10"
                 step="1"
                 value={rating}
-                onChange={(e) => updateRating(formula, Number(e.target.value))}
-                aria-label={`Knowledge rating for ${formula}`}
+                onChange={(e) => updateRating(entry, Number(e.target.value))}
+                aria-label={`Knowledge rating for ${entry.name || entry.formula}`}
               />
             </div>
           );

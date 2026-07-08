@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { AuthProvider, pushLocalStateToCloud } from "./context/AuthProvider.jsx";
 import { useStudySets } from "./hooks/useStudySets.js";
 import { useProgress } from "./hooks/useProgress.js";
 import { useTheme } from "./hooks/useTheme.js";
@@ -18,14 +19,56 @@ import { StatsView } from "./views/StatsView.jsx";
 import { StudySetsView } from "./views/StudySetsView.jsx";
 
 export default function App() {
-  const { sets, activeSet, activeSetId, selectSet, importFromJson, deleteSet } = useStudySets();
-  const { progress, saveProgress, resetProgress, deleteProgressForSet } = useProgress(activeSetId);
+  const [syncVersion, setSyncVersion] = useState(0);
+  const setsRef = useRef([]);
+  const activeSetIdRef = useRef(null);
+  const scheduleSyncRef = useRef(null);
+
+  const handleLocalPush = useCallback(async (userId) => {
+    await pushLocalStateToCloud(userId, setsRef.current, activeSetIdRef.current);
+  }, []);
+
+  const handleDataChange = useCallback((sets, activeSetId) => {
+    if (Array.isArray(sets)) setsRef.current = sets;
+    if (activeSetId) activeSetIdRef.current = activeSetId;
+    scheduleSyncRef.current?.();
+  }, []);
+
+  return (
+    <AuthProvider
+      onCloudDataApplied={() => setSyncVersion((v) => v + 1)}
+      onRequestLocalPush={handleLocalPush}
+    >
+      <StudyApp
+        syncVersion={syncVersion}
+        setsRef={setsRef}
+        activeSetIdRef={activeSetIdRef}
+        scheduleSyncRef={scheduleSyncRef}
+        onDataChange={handleDataChange}
+      />
+    </AuthProvider>
+  );
+}
+
+function StudyApp({ syncVersion, setsRef, activeSetIdRef, scheduleSyncRef, onDataChange }) {
+  const { sets, activeSet, activeSetId, selectSet, importFromJson, deleteSet } = useStudySets({
+    syncVersion,
+    onDataChange,
+  });
+
+  setsRef.current = sets;
+  activeSetIdRef.current = activeSetId;
+
+  const { progress, saveProgress, resetProgress, deleteProgressForSet } = useProgress(activeSetId, {
+    syncVersion,
+    onDataChange: () => onDataChange(setsRef.current, activeSetIdRef.current),
+  });
+
   const { theme, toggleTheme } = useTheme();
   const [currentView, setCurrentView] = useState("home");
   const [pendingStudyId, setPendingStudyId] = useState(null);
 
   const activeSetName = activeSet.name;
-
   const accuracy = progress.totalAnswered
     ? Math.round((progress.totalCorrect / progress.totalAnswered) * 100)
     : 0;
@@ -51,6 +94,7 @@ export default function App() {
         onNavigate={navigate}
         theme={theme}
         onToggleTheme={toggleTheme}
+        scheduleSyncRef={scheduleSyncRef}
       />
 
       <ActiveSetBar
@@ -117,7 +161,7 @@ export default function App() {
           <FormulasView
             key={activeSetId}
             activeSetName={activeSetName}
-            questions={activeSet.questions}
+            formulaSheet={activeSet.formulaSheet ?? []}
             progress={progress}
             saveProgress={saveProgress}
           />

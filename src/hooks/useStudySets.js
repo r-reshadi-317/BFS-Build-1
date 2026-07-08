@@ -1,77 +1,51 @@
-import { useCallback, useMemo, useState } from "react";
-import { QUESTIONS } from "../data/questions.js";
-import { STUDY_GUIDE } from "../data/studyGuide.js";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { resolveFlashcards } from "../utils/flashcards.js";
 import {
   DEFAULT_SET_ID,
   createStudySetId,
   validateAndNormalizeStudySet,
+  buildFormulaSheetFromQuestions,
 } from "../utils/studySetValidation.js";
+import {
+  buildDefaultSet,
+  loadSetsFromStorage,
+  loadActiveSetId,
+  persistSets,
+  persistActiveSetId,
+} from "../storage/studyStorage.js";
 
-const SETS_STORAGE_KEY = "fbla-bfs-study-sets-v1";
-const ACTIVE_SET_KEY = "fbla-bfs-active-set-v1";
-
-function buildDefaultSet() {
-  const flashcards = resolveFlashcards(QUESTIONS);
-  return {
-    id: DEFAULT_SET_ID,
-    name: "FBLA Banking & Financial Systems (Built-in)",
-    description: "Default national prep question bank, study guide, and flashcards.",
-    questions: QUESTIONS,
-    studyGuide: STUDY_GUIDE,
-    flashcards,
-    isBuiltIn: true,
-    createdAt: 0,
-  };
-}
-
-function loadSetsFromStorage() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(SETS_STORAGE_KEY));
-    if (raw?.sets?.length) {
-      const hasDefault = raw.sets.some((s) => s.id === DEFAULT_SET_ID);
-      if (!hasDefault) {
-        return [buildDefaultSet(), ...raw.sets];
-      }
-      return raw.sets;
-    }
-  } catch {
-    /* ignore */
-  }
-  return [buildDefaultSet()];
-}
-
-function loadActiveSetId(sets) {
-  try {
-    const saved = localStorage.getItem(ACTIVE_SET_KEY);
-    if (saved && sets.some((s) => s.id === saved)) return saved;
-  } catch {
-    /* ignore */
-  }
-  return sets[0]?.id ?? DEFAULT_SET_ID;
-}
-
-function persistSets(sets) {
-  localStorage.setItem(SETS_STORAGE_KEY, JSON.stringify({ sets }));
-}
-
-function persistActiveSetId(id) {
-  localStorage.setItem(ACTIVE_SET_KEY, id);
-}
-
-export function useStudySets() {
+export function useStudySets({ syncVersion = 0, onDataChange } = {}) {
   const [sets, setSets] = useState(loadSetsFromStorage);
   const [activeSetId, setActiveSetId] = useState(() => loadActiveSetId(loadSetsFromStorage()));
 
-  const activeSet = useMemo(
-    () => sets.find((s) => s.id === activeSetId) ?? sets[0] ?? buildDefaultSet(),
-    [sets, activeSetId]
-  );
+  useEffect(() => {
+    const loaded = loadSetsFromStorage();
+    const storedActiveId = loadActiveSetId(loaded);
+    setSets(loaded);
+    // Keep in-memory selection when still valid — avoids flicker if storage was briefly stale.
+    setActiveSetId((current) => (
+      loaded.some((s) => s.id === current) ? current : storedActiveId
+    ));
+  }, [syncVersion]);
+
+  const activeSet = useMemo(() => {
+    const found = sets.find((s) => s.id === activeSetId) ?? sets[0] ?? buildDefaultSet();
+    if (Array.isArray(found.formulaSheet)) return found;
+    return {
+      ...found,
+      formulaSheet: buildFormulaSheetFromQuestions(found.questions ?? []),
+    };
+  }, [sets, activeSetId]);
+
+  const notifyChange = useCallback((nextSets, nextActiveId) => {
+    onDataChange?.(nextSets, nextActiveId ?? activeSetId);
+  }, [onDataChange, activeSetId]);
 
   const selectSet = useCallback((id) => {
     setActiveSetId(id);
     persistActiveSetId(id);
-  }, []);
+    notifyChange(sets, id);
+  }, [sets, notifyChange]);
 
   const addSet = useCallback((normalized, options = {}) => {
     const newSet = {
@@ -81,6 +55,7 @@ export function useStudySets() {
       questions: normalized.questions,
       studyGuide: normalized.studyGuide,
       flashcards: normalized.flashcards,
+      formulaSheet: normalized.formulaSheet,
       isBuiltIn: false,
       createdAt: Date.now(),
     };
@@ -88,15 +63,21 @@ export function useStudySets() {
     setSets((prev) => {
       const next = [...prev, newSet];
       persistSets(next);
+      const nextActiveId = options.activate ? newSet.id : activeSetId;
+      if (options.activate) {
+        setActiveSetId(newSet.id);
+        persistActiveSetId(newSet.id);
+      }
+      notifyChange(next, nextActiveId);
       return next;
     });
 
     if (options.activate) {
-      selectSet(newSet.id);
+      return newSet.id;
     }
 
     return newSet.id;
-  }, [selectSet]);
+  }, [activeSetId, notifyChange]);
 
   const importFromJson = useCallback((raw, fallbackName, options = {}) => {
     const normalized = validateAndNormalizeStudySet(raw, fallbackName);
@@ -110,15 +91,17 @@ export function useStudySets() {
     setSets((prev) => {
       const next = prev.filter((s) => s.id !== id);
       persistSets(next);
+      const nextActiveId = activeSetId === id ? DEFAULT_SET_ID : activeSetId;
+      if (activeSetId === id) {
+        setActiveSetId(DEFAULT_SET_ID);
+        persistActiveSetId(DEFAULT_SET_ID);
+      }
+      notifyChange(next, nextActiveId);
       return next;
     });
 
-    if (activeSetId === id) {
-      selectSet(DEFAULT_SET_ID);
-    }
-
     return true;
-  }, [sets, activeSetId, selectSet]);
+  }, [sets, activeSetId, notifyChange]);
 
   return {
     sets,

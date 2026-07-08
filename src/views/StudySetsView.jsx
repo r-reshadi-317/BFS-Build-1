@@ -69,6 +69,8 @@ export function StudySetsView({
         <p className="muted">
           JSON must include <code>questions</code> and <code>studyGuide</code> arrays.
           Optional <code>flashcards</code> array; if omitted, flashcards are generated from questions.
+          Optional <code>formulaSheet</code> array; if omitted, formulas are derived from question{" "}
+          <code>formulaUsed</code> fields.
         </p>
 
         <div className="upload-actions">
@@ -118,6 +120,16 @@ export function StudySetsView({
       "back": "Answer (HTML allowed)",
       "tags": ["optional"]
     }
+  ],
+  "formulaSheet": [
+    {
+      "id": "current-ratio",
+      "name": "Current Ratio",
+      "formula": "Current Ratio = Current Assets / Current Liabilities",
+      "description": "Measures short-term liquidity; higher is generally better.",
+      "category": "Financial Ratios",
+      "tags": ["Liquidity"]
+    }
   ]
 }`}</pre>
         </details>
@@ -146,7 +158,7 @@ export function StudySetsView({
               </div>
               {set.description && <p className="muted">{set.description}</p>}
               <p className="set-stats muted">
-                {set.questions.length} questions · {set.studyGuide.length} sections · {set.flashcards.length} flashcards
+                {set.questions.length} questions · {set.studyGuide.length} sections · {set.flashcards.length} flashcards · {set.formulaSheet.length} formulas
               </p>
               <div className="inline-actions">
                 <button
