@@ -124,7 +124,7 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
                     })()}
                   </div>
                 ) : (
-                  <button type="button" className="btn btn-sm primary auth-btn" onClick={() => setAuthOpen(true)}>
+                <button type="button" className="btn btn-sm primary auth-btn" onClick={() => { console.debug('Header: sign-in button clicked'); setAuthOpen(true); }}>
                     Sign in
                   </button>
                 )
@@ -132,6 +132,9 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
 
           </div>
         </div>
+        {authOpen && (
+          <div id="auth-debug" style={{ position: 'fixed', top: '64px', right: '1rem', background: 'rgba(255,255,0,0.9)', color: '#000', padding: '6px 8px', borderRadius: 6, zIndex: 999 }}>Auth modal state: open</div>
+        )}
 
         <nav className={`main-nav ${menuOpen ? "open" : ""}`} aria-label="Main navigation">
           {NAV_ITEMS.map((item) => (
