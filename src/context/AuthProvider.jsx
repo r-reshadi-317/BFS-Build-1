@@ -92,7 +92,24 @@ export function AuthProvider({ children }) {
     if (window?.supabase?.auth?.signInWithPassword) {
       const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      setUser(data?.user ?? data?.session?.user ?? null);
+      const signedInUser = data?.user ?? data?.session?.user ?? null;
+      
+      // After successful sign-in, restore any preserved local profile and merge it
+      if (signedInUser) {
+        try {
+          const rawProfile = localStorage.getItem("user_profile");
+          if (rawProfile) {
+            const profile = JSON.parse(rawProfile);
+            if (profile && Object.keys(profile).length > 0) {
+              signedInUser.user_metadata = { ...(signedInUser.user_metadata || {}), ...profile };
+            }
+          }
+        } catch (e) {
+          // ignore malformed profile
+        }
+      }
+      
+      setUser(signedInUser);
       return data;
     }
 
@@ -104,6 +121,22 @@ export function AuthProvider({ children }) {
         const err = res?.error ?? res?.data?.error;
         if (err) throw err;
         const u = res?.user ?? res?.data?.user ?? res?.data ?? null;
+        
+        // After successful sign-in, restore any preserved local profile and merge it
+        if (u) {
+          try {
+            const rawProfile = localStorage.getItem("user_profile");
+            if (rawProfile) {
+              const profile = JSON.parse(rawProfile);
+              if (profile && Object.keys(profile).length > 0) {
+                u.user_metadata = { ...(u.user_metadata || {}), ...profile };
+              }
+            }
+          } catch (e) {
+            // ignore malformed profile
+          }
+        }
+        
         setUser(u);
         return res;
       } catch (e) {
@@ -114,8 +147,20 @@ export function AuthProvider({ children }) {
     // fallback: store a lightweight marker so ProfileView can detect email
     try {
       localStorage.setItem("user_email", email);
-      setUser({ email, user_metadata: {} });
-      return { user: { email } };
+      
+      // After sign-in, restore any preserved local profile (avatar, name, etc)
+      let metadata = {};
+      try {
+        const rawProfile = localStorage.getItem("user_profile");
+        if (rawProfile) {
+          metadata = JSON.parse(rawProfile);
+        }
+      } catch (e) {
+        // ignore malformed profile
+      }
+      
+      setUser({ email, user_metadata: metadata });
+      return { user: { email, user_metadata: metadata } };
     } catch (e) {
       throw e;
     }
