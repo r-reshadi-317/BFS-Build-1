@@ -16,6 +16,7 @@ import { ReviewView } from "./views/ReviewView.jsx";
 import { BookmarksView } from "./views/BookmarksView.jsx";
 import { StatsView } from "./views/StatsView.jsx";
 import { StudySetsView } from "./views/StudySetsView.jsx";
+import { ProfileView } from "./views/ProfileView.jsx";
 
 export default function App() {
   const { sets, activeSet, activeSetId, selectSet, importFromJson, deleteSet } = useStudySets();
@@ -158,6 +159,12 @@ export default function App() {
             activeSetName={activeSetName}
             questions={activeSet.questions}
             progress={progress}
+          />
+        )}
+
+        {currentView === "profile" && (
+          <ProfileView
+            onNavigate={navigate}
           />
         )}
 

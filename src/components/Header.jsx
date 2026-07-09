@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { id: "search", label: "Search", icon: "🔍" },
   { id: "review", label: "Review", icon: "↩️" },
   { id: "bookmarks", label: "Bookmarks", icon: "⭐" },
+  { id: "profile", label: "Profile", icon: "👤" },
   { id: "stats", label: "Statistics", icon: "📈" },
 ];
 
