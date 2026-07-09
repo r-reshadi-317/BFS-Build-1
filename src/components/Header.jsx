@@ -60,19 +60,29 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
             {!loading && (
               user ? (
                 <div className="auth-user">
-                  <span className="auth-user-label" title={user.email}>
-                    {user.email.split("@")[0]}
-                  </span>
-                  <button type="button" className="btn btn-sm auth-btn" onClick={() => { window.location.hash = "#profile"; onNavigate("profile"); }}>
-                    Account
+                    {(() => {
+                      const email = typeof user?.email === "string" ? user.email : null;
+                      const isEmail = email && email.length < 128 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                      const label = isEmail ? email.split("@")[0] : (user?.user_metadata?.full_name || "Account");
+                      const title = isEmail ? email : undefined;
+                      return (
+                        <>
+                          <span className="auth-user-label" title={title}>
+                            {label}
+                          </span>
+                          <button type="button" className="btn btn-sm auth-btn" onClick={() => { window.location.hash = "#profile"; onNavigate("profile"); }}>
+                            Account
+                          </button>
+                        </>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <button type="button" className="btn btn-sm primary auth-btn" onClick={() => setAuthOpen(true)}>
+                    Sign in
                   </button>
-                </div>
-              ) : (
-                <button type="button" className="btn btn-sm primary auth-btn" onClick={() => setAuthOpen(true)}>
-                  Sign in
-                </button>
-              )
-            )}
+                )
+              )}
 
             <button
               type="button"
