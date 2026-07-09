@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { PageHeader } from "../components/PageHeader.jsx";
 import { unique } from "../utils/helpers.js";
 
@@ -25,10 +25,36 @@ export function FlashcardsView({ activeSetName, flashcards, progress, saveProgre
   }
 
   function move(step) {
-    if (!deck.length) return;
-    setIndex((i) => (i + step + deck.length) % deck.length);
+    const len = deck.length;
+    if (!len) return;
+    setIndex((i) => (i + step + len) % len);
     setFlipped(false);
   }
+
+  useEffect(() => {
+    function onKey(e) {
+      const activeTag = document.activeElement?.tagName;
+      const isEditing = activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT" || document.activeElement?.isContentEditable;
+      if (isEditing) return;
+
+      if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        move(-1);
+        return;
+      }
+      if (e.code === "ArrowRight") {
+        e.preventDefault();
+        move(1);
+        return;
+      }
+      if (e.code === "Space" || e.code === "Spacebar") {
+        e.preventDefault();
+        setFlipped((f) => !f);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [deck.length]);
 
   function markFlashcard(type) {
     if (!card) return;
@@ -67,6 +93,7 @@ export function FlashcardsView({ activeSetName, flashcards, progress, saveProgre
             className={`flashcard ${flipped ? "flipped" : ""}`}
             onClick={() => setFlipped((f) => !f)}
             aria-label="Flip flashcard"
+            title="Click or press Space to flip. Arrow keys navigate."
           >
             <div className="flashcard-inner">
               <div className="flashcard-face flashcard-front">
