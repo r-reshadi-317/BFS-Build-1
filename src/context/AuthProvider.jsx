@@ -22,7 +22,7 @@ export function AuthProvider({ children, onCloudDataApplied, onRequestLocalPush 
   }, [user]);
 
   const applyCloudData = useCallback((cloudData) => {
-    const applied = applyCloudSyncPayload(cloudData);
+    const applied = applyCloudSyncPayload(cloudData, cloudData.updatedAt);
     onCloudDataApplied?.(applied);
     return applied;
   }, [onCloudDataApplied]);

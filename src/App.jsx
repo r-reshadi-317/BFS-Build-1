@@ -34,9 +34,13 @@ export default function App() {
     scheduleSyncRef.current?.();
   }, []);
 
+  const handleCloudDataApplied = useCallback(() => {
+    setSyncVersion((v) => v + 1);
+  }, []);
+
   return (
     <AuthProvider
-      onCloudDataApplied={() => setSyncVersion((v) => v + 1)}
+      onCloudDataApplied={handleCloudDataApplied}
       onRequestLocalPush={handleLocalPush}
     >
       <StudyApp

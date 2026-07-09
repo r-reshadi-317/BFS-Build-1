@@ -70,12 +70,20 @@ export function loadActiveSetId(sets) {
   return sets[0]?.id ?? DEFAULT_SET_ID;
 }
 
-export function persistSets(sets) {
+export const SYNC_METADATA_KEY = "fbla-bfs-sync-metadata-v1";
+
+export function persistSets(sets, { markLocalChange = true } = {}) {
   localStorage.setItem(SETS_STORAGE_KEY, JSON.stringify({ sets }));
+  if (markLocalChange) {
+    localStorage.setItem(SYNC_METADATA_KEY, JSON.stringify({ lastLocalUpdateAt: Date.now() }));
+  }
 }
 
-export function persistActiveSetId(id) {
+export function persistActiveSetId(id, { markLocalChange = true } = {}) {
   localStorage.setItem(ACTIVE_SET_KEY, id);
+  if (markLocalChange) {
+    localStorage.setItem(SYNC_METADATA_KEY, JSON.stringify({ lastLocalUpdateAt: Date.now() }));
+  }
 }
 
 function migrateV1Progress() {
@@ -104,21 +112,50 @@ export function loadProgressBySet() {
   return {};
 }
 
+export function loadLastLocalSyncTimestamp() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SYNC_METADATA_KEY));
+    if (raw?.lastLocalUpdateAt && Number.isFinite(raw.lastLocalUpdateAt)) {
+      return raw.lastLocalUpdateAt;
+    }
+  } catch {
+    /* ignore */
+  }
+  return 0;
+}
+
+export function markLocalDataChange() {
+  localStorage.setItem(SYNC_METADATA_KEY, JSON.stringify({ lastLocalUpdateAt: Date.now() }));
+}
+
 export function readProgress(setId) {
   const bySet = loadProgressBySet();
   return { ...PROGRESS_DEFAULTS, ...(bySet[setId] || {}) };
 }
 
-export function writeProgress(setId, progress) {
+export function writeProgress(setId, progress, { markLocalChange = true } = {}) {
   const bySet = loadProgressBySet();
   bySet[setId] = progress;
   localStorage.setItem(PROGRESS_KEY, JSON.stringify({ bySet }));
+  if (markLocalChange) {
+    markLocalDataChange();
+  }
 }
 
-export function deleteProgressForSet(setId) {
+export function persistProgressBySet(progressBySet, { markLocalChange = true } = {}) {
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify({ bySet: progressBySet }));
+  if (markLocalChange) {
+    markLocalDataChange();
+  }
+}
+
+export function deleteProgressForSet(setId, { markLocalChange = true } = {}) {
   const bySet = loadProgressBySet();
   delete bySet[setId];
   localStorage.setItem(PROGRESS_KEY, JSON.stringify({ bySet }));
+  if (markLocalChange) {
+    markLocalDataChange();
+  }
 }
 
 export function emptyProgress() {
@@ -138,31 +175,30 @@ export function collectLocalSyncPayload(sets, activeSetId) {
   };
 }
 
-export function applyCloudSyncPayload({ customSets, activeSetId, progressBySet }) {
+export function applyCloudSyncPayload({ customSets, activeSetId, progressBySet }, cloudUpdatedAt = null) {
   const safeCustomSets = (Array.isArray(customSets) ? customSets : []).map(ensureSetShape);
   const allSets = [buildDefaultSet(), ...safeCustomSets];
 
-  let hasSavedActive = false;
-  try {
-    hasSavedActive = localStorage.getItem(ACTIVE_SET_KEY) != null;
-  } catch {
-    /* ignore */
+  const localUpdatedAt = loadLastLocalSyncTimestamp();
+  const remoteUpdatedAt = cloudUpdatedAt ? Date.parse(cloudUpdatedAt) : 0;
+  const shouldApplyCloud = !remoteUpdatedAt || remoteUpdatedAt > localUpdatedAt;
+  if (!shouldApplyCloud) {
+    const existingSets = loadSetsFromStorage();
+    return { sets: existingSets, activeSetId: loadActiveSetId(existingSets) };
   }
 
   const localActiveId = loadActiveSetId(allSets);
 
-  persistSets(allSets);
+  persistSets(allSets, { markLocalChange: false });
 
-  const resolvedActiveId = hasSavedActive && allSets.some((s) => s.id === localActiveId)
-    ? localActiveId
-    : (activeSetId && allSets.some((s) => s.id === activeSetId)
-      ? activeSetId
-      : allSets[0].id);
+  const resolvedActiveId = (activeSetId && allSets.some((s) => s.id === activeSetId))
+    ? activeSetId
+    : localActiveId || allSets[0].id;
 
-  persistActiveSetId(resolvedActiveId);
+  persistActiveSetId(resolvedActiveId, { markLocalChange: false });
 
   const safeProgress = progressBySet && typeof progressBySet === "object" ? progressBySet : {};
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify({ bySet: safeProgress }));
+  persistProgressBySet(safeProgress, { markLocalChange: false });
 
   return { sets: allSets, activeSetId: resolvedActiveId };
 }
