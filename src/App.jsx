@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { AuthProvider, pushLocalStateToCloud } from "./context/AuthProvider.jsx";
 import { useStudySets } from "./hooks/useStudySets.js";
 import { useProgress } from "./hooks/useProgress.js";
 import { useTheme } from "./hooks/useTheme.js";
@@ -16,22 +17,82 @@ import { ReviewView } from "./views/ReviewView.jsx";
 import { BookmarksView } from "./views/BookmarksView.jsx";
 import { StatsView } from "./views/StatsView.jsx";
 import { StudySetsView } from "./views/StudySetsView.jsx";
+import { StudySetCreatorView } from "./views/StudySetCreatorView.jsx";
 
 export default function App() {
-  const { sets, activeSet, activeSetId, selectSet, importFromJson, deleteSet } = useStudySets();
-  const { progress, saveProgress, resetProgress, deleteProgressForSet } = useProgress(activeSetId);
+  const [syncVersion, setSyncVersion] = useState(0);
+  const setsRef = useRef([]);
+  const activeSetIdRef = useRef(null);
+  const scheduleSyncRef = useRef(null);
+
+  const handleLocalPush = useCallback(async (userId) => {
+    await pushLocalStateToCloud(userId, setsRef.current, activeSetIdRef.current);
+  }, []);
+
+  const handleDataChange = useCallback((sets, activeSetId) => {
+    if (Array.isArray(sets)) setsRef.current = sets;
+    if (activeSetId) activeSetIdRef.current = activeSetId;
+    scheduleSyncRef.current?.();
+  }, []);
+
+  const handleCloudDataApplied = useCallback(() => {
+    setSyncVersion((v) => v + 1);
+  }, []);
+
+  return (
+    <AuthProvider
+      onCloudDataApplied={handleCloudDataApplied}
+      onRequestLocalPush={handleLocalPush}
+    >
+      <StudyApp
+        syncVersion={syncVersion}
+        setsRef={setsRef}
+        activeSetIdRef={activeSetIdRef}
+        scheduleSyncRef={scheduleSyncRef}
+        onDataChange={handleDataChange}
+      />
+    </AuthProvider>
+  );
+}
+
+function StudyApp({ syncVersion, setsRef, activeSetIdRef, scheduleSyncRef, onDataChange }) {
+  const { sets, activeSet, activeSetId, selectSet, importFromJson, createSet, deleteSet, updateSet } = useStudySets({
+    syncVersion,
+    onDataChange,
+  });
+
+  setsRef.current = sets;
+  activeSetIdRef.current = activeSetId;
+
+  const { progress, saveProgress, resetProgress, deleteProgressForSet } = useProgress(activeSetId, {
+    syncVersion,
+    onDataChange: () => onDataChange(setsRef.current, activeSetIdRef.current),
+  });
+
   const { theme, toggleTheme } = useTheme();
   const [currentView, setCurrentView] = useState("home");
   const [pendingStudyId, setPendingStudyId] = useState(null);
+  const [creatorSetId, setCreatorSetId] = useState(null);
 
+  const handleEditInCreator = useCallback((setId) => {
+    setCreatorSetId(setId);
+    setCurrentView("study-set-creator");
+  }, []);
+
+  const handleExitCreator = useCallback(() => {
+    setCreatorSetId(null);
+  }, []);
+ 
   const activeSetName = activeSet.name;
-
   const accuracy = progress.totalAnswered
     ? Math.round((progress.totalCorrect / progress.totalAnswered) * 100)
     : 0;
 
   const navigate = useCallback((viewId) => {
     setCurrentView(viewId);
+    if (viewId !== "study-set-creator") {
+      setCreatorSetId(null);
+    }
   }, []);
 
   const openStudySection = useCallback((sectionId) => {
@@ -51,6 +112,7 @@ export default function App() {
         onNavigate={navigate}
         theme={theme}
         onToggleTheme={toggleTheme}
+        scheduleSyncRef={scheduleSyncRef}
       />
 
       <ActiveSetBar
@@ -77,11 +139,25 @@ export default function App() {
             activeSetId={activeSetId}
             selectSet={selectSet}
             importFromJson={importFromJson}
+            updateSet={updateSet}
             deleteSet={deleteSet}
             deleteProgressForSet={deleteProgressForSet}
+            onEditInCreator={handleEditInCreator}
           />
         )}
 
+        {currentView === "study-set-creator" && (
+          <StudySetCreatorView
+            initialSet={sets.find((s) => s.id === creatorSetId) ?? null}
+            createSet={createSet}
+            updateSet={updateSet}
+            onCancelEdit={() => {
+              handleExitCreator();
+              setCurrentView("study-sets");
+            }}
+          />
+        )}
+ 
         {currentView === "study" && (
           <StudyView
             key={activeSetId}
@@ -117,7 +193,7 @@ export default function App() {
           <FormulasView
             key={activeSetId}
             activeSetName={activeSetName}
-            questions={activeSet.questions}
+            formulaSheet={activeSet.formulaSheet ?? []}
             progress={progress}
             saveProgress={saveProgress}
           />

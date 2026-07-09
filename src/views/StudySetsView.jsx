@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { StudySetValidationError } from "../utils/studySetValidation.js";
+import { useEffect, useRef, useState } from "react";
+import { StudySetValidationError, validateAndNormalizeStudySet } from "../utils/studySetValidation.js";
 import { PageHeader } from "../components/PageHeader.jsx";
 
 export function StudySetsView({
@@ -8,12 +8,19 @@ export function StudySetsView({
   activeSetId,
   selectSet,
   importFromJson,
+  updateSet,
   deleteSet,
   deleteProgressForSet,
+  onEditInCreator,
 }) {
   const fileRef = useRef(null);
+  const editPanelRef = useRef(null);
   const [status, setStatus] = useState(null);
   const [errors, setErrors] = useState([]);
+  const [editingSetId, setEditingSetId] = useState(null);
+  const [editText, setEditText] = useState("");
+  const [editStatus, setEditStatus] = useState(null);
+  const [editErrors, setEditErrors] = useState([]);
 
   async function handleUpload(event) {
     const file = event.target.files?.[0];
@@ -46,11 +53,80 @@ export function StudySetsView({
     setStatus(`Switched to "${sets.find((s) => s.id === id)?.name ?? "study set"}".`);
   }
 
+  function openEditor(set) {
+    setEditingSetId(set.id);
+    setEditStatus(null);
+    setEditErrors([]);
+    setEditText(JSON.stringify({
+      name: set.name,
+      description: set.description,
+      questions: set.questions,
+      studyGuide: set.studyGuide,
+      flashcards: set.flashcards,
+      formulaSheet: set.formulaSheet,
+    }, null, 2));
+  }
+
+  function closeEditor() {
+    setEditingSetId(null);
+    setEditText("");
+    setEditStatus(null);
+    setEditErrors([]);
+  }
+
+  useEffect(() => {
+    if (!editingSetId) return;
+    editPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [editingSetId]);
+
+  async function saveEditedSet() {
+    const target = sets.find((s) => s.id === editingSetId);
+    if (!target) return;
+
+    setEditStatus(null);
+    setEditErrors([]);
+
+    try {
+      const raw = JSON.parse(editText);
+      const normalized = validateAndNormalizeStudySet(raw, target.name);
+      updateSet(editingSetId, normalized);
+      setEditStatus(`Saved changes to "${normalized.name}".`);
+    } catch (err) {
+      if (err instanceof StudySetValidationError) {
+        setEditErrors(err.errors);
+      } else if (err instanceof SyntaxError) {
+        setEditErrors(["Invalid JSON. Fix formatting and try again."]);
+      } else {
+        setEditErrors([err.message || "Save failed."]);
+      }
+    }
+  }
+
+  function downloadSet(set) {
+    const payload = {
+      name: set.name,
+      description: set.description,
+      questions: set.questions,
+      studyGuide: set.studyGuide,
+      flashcards: set.flashcards,
+      formulaSheet: set.formulaSheet,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${set.name.replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "").toLowerCase() || "study-set"}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   function handleDelete(id) {
     const set = sets.find((s) => s.id === id);
     if (!set || set.isBuiltIn) return;
     if (!confirm(`Delete "${set.name}" and its saved progress? This cannot be undone.`)) return;
-
+ 
     deleteProgressForSet(id);
     deleteSet(id);
     setStatus(`Deleted "${set.name}".`);
@@ -69,6 +145,8 @@ export function StudySetsView({
         <p className="muted">
           JSON must include <code>questions</code> and <code>studyGuide</code> arrays.
           Optional <code>flashcards</code> array; if omitted, flashcards are generated from questions.
+          Optional <code>formulaSheet</code> array; if omitted, formulas are derived from question{" "}
+          <code>formulaUsed</code> fields.
         </p>
 
         <div className="upload-actions">
@@ -118,11 +196,54 @@ export function StudySetsView({
       "back": "Answer (HTML allowed)",
       "tags": ["optional"]
     }
+  ],
+  "formulaSheet": [
+    {
+      "id": "current-ratio",
+      "name": "Current Ratio",
+      "formula": "Current Ratio = Current Assets / Current Liabilities",
+      "description": "Measures short-term liquidity; higher is generally better.",
+      "category": "Financial Ratios",
+      "tags": ["Liquidity"]
+    }
   ]
 }`}</pre>
         </details>
       </div>
-
+ 
+      {editingSetId && (
+        <div ref={editPanelRef} className="panel edit-panel">
+          <h3>Edit imported set JSON</h3>
+          <p className="muted">
+            Modify the JSON below and save to update the selected custom study set.
+          </p>
+          <textarea
+            className="json-editor"
+            value={editText}
+            onChange={(event) => setEditText(event.target.value)}
+            rows={18}
+            aria-label="Edit custom study set JSON"
+          />
+          <div className="inline-actions">
+            <button type="button" className="btn primary" onClick={saveEditedSet}>
+              Save changes
+            </button>
+            <button type="button" className="btn secondary" onClick={closeEditor}>
+              Cancel
+            </button>
+          </div>
+          {editStatus && <div className="status-banner good">{editStatus}</div>}
+          {editErrors.length > 0 && (
+            <div className="status-banner bad">
+              <strong>Could not save changes:</strong>
+              <ul>
+                {editErrors.map((err) => <li key={err}>{err}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+ 
       {status && <div className="status-banner good">{status}</div>}
       {errors.length > 0 && (
         <div className="status-banner bad">
@@ -146,7 +267,7 @@ export function StudySetsView({
               </div>
               {set.description && <p className="muted">{set.description}</p>}
               <p className="set-stats muted">
-                {set.questions.length} questions · {set.studyGuide.length} sections · {set.flashcards.length} flashcards
+                {set.questions.length} questions · {set.studyGuide.length} sections · {set.flashcards.length} flashcards · {set.formulaSheet.length} formulas
               </p>
               <div className="inline-actions">
                 <button
@@ -157,10 +278,25 @@ export function StudySetsView({
                 >
                   {isActive ? "Selected" : "Use this set"}
                 </button>
+                <button
+                  type="button"
+                  className="btn secondary"
+                  onClick={() => downloadSet(set)}
+                >
+                  Download
+                </button>
                 {!set.isBuiltIn && (
-                  <button type="button" className="btn bad" onClick={() => handleDelete(set.id)}>
-                    Delete
-                  </button>
+                  <>
+                    <button type="button" className="btn secondary" onClick={() => openEditor(set)}>
+                      Edit JSON
+                    </button>
+                    <button type="button" className="btn secondary" onClick={() => onEditInCreator(set.id)}>
+                      Edit in Study Set Creator
+                    </button>
+                    <button type="button" className="btn bad" onClick={() => handleDelete(set.id)}>
+                      Delete
+                    </button>
+                  </>
                 )}
               </div>
             </div>

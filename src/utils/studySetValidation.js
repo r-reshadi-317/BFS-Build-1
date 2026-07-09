@@ -67,6 +67,48 @@ function normalizeStudySection(raw, index, errors) {
   };
 }
 
+function normalizeFormulaEntry(raw, index, errors) {
+  if (!raw || typeof raw !== "object") {
+    errors.push(`Formula ${index + 1}: must be an object`);
+    return null;
+  }
+
+  const formula = raw.formula != null ? String(raw.formula).trim() : "";
+  if (!formula) errors.push(`Formula ${index + 1}: missing "formula"`);
+
+  const id = raw.id ? String(raw.id) : "";
+
+  return {
+    id,
+    name: raw.name ? String(raw.name) : "",
+    formula,
+    description: raw.description ? String(raw.description) : "",
+    category: raw.category || "General",
+    tags: Array.isArray(raw.tags) ? raw.tags : [],
+  };
+}
+
+export function buildFormulaSheetFromQuestions(questions) {
+  const seen = new Set();
+  const sheet = [];
+
+  for (const question of questions) {
+    const formula = question.formulaUsed?.trim();
+    if (!formula || seen.has(formula)) continue;
+    seen.add(formula);
+    sheet.push({
+      id: "",
+      name: "",
+      formula,
+      description: "",
+      category: question.category || "General",
+      tags: [],
+    });
+  }
+
+  return sheet;
+}
+
 function normalizeFlashcard(raw, index, errors) {
   if (!raw || typeof raw !== "object") {
     errors.push(`Flashcard ${index + 1}: must be an object`);
@@ -123,6 +165,15 @@ export function validateAndNormalizeStudySet(raw, fallbackName) {
     flashcards = buildFlashcardsFromQuestions(questions);
   }
 
+  let formulaSheet;
+  if (Array.isArray(raw.formulaSheet) && raw.formulaSheet.length > 0) {
+    formulaSheet = raw.formulaSheet
+      .map((entry, i) => normalizeFormulaEntry(entry, i, errors))
+      .filter(Boolean);
+  } else {
+    formulaSheet = buildFormulaSheetFromQuestions(questions);
+  }
+
   if (errors.length) throw new StudySetValidationError(errors);
 
   if (!questions.length && !flashcards.length && !studyGuide.length) {
@@ -135,6 +186,7 @@ export function validateAndNormalizeStudySet(raw, fallbackName) {
     questions,
     studyGuide,
     flashcards,
+    formulaSheet,
   };
 }
 
