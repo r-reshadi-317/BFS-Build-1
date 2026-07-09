@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "../components/PageHeader.jsx";
 import { useStudySets } from "../hooks/useStudySets.js";
+import { useAuth } from "../context/AuthProvider.jsx";
 
 const PROGRESS_KEY_V1 = "fbla-bfs-progress-v1";
 const PROGRESS_KEY = "fbla-bfs-progress-v2";
 
 export function ProfileView({ onNavigate }) {
   const { sets } = useStudySets();
+  const { user: authUser, signOut: authSignOut } = useAuth();
   const [progressTotals, setProgressTotals] = useState({ totalAnswered: 0, totalCorrect: 0, bookmarks: 0, flashKnown: 0, flashReview: 0 });
   const [setsCount, setSetsCount] = useState({ total: 0, custom: 0 });
   const [signingOut, setSigningOut] = useState(false);
@@ -96,7 +98,16 @@ export function ProfileView({ onNavigate }) {
   async function handleSignOut() {
     setSigningOut(true);
     try {
-      // If a global supabase client exists, try to sign out through it
+      // Prefer the AuthProvider's signOut if provided
+      if (typeof authSignOut === "function") {
+        try {
+          await authSignOut();
+        } catch (e) {
+          // ignore and fallback
+        }
+      }
+
+      // If a global supabase client exists and signOut is available, call it as a fallback
       if (window?.supabase?.auth?.signOut) {
         try { await window.supabase.auth.signOut(); } catch (e) { /* ignore */ }
       }
@@ -112,6 +123,8 @@ export function ProfileView({ onNavigate }) {
     }
   }
 
+  const displayEmail = authUser?.email ?? detectedEmail;
+
   return (
     <section className="view active">
       <PageHeader activeSetName="" title="Profile" lead="Account information and overall progress" />
@@ -119,11 +132,11 @@ export function ProfileView({ onNavigate }) {
       <div className="panel">
         <h3>Account</h3>
         <p>
-          <strong>Email:</strong> {detectedEmail ?? "(not signed in)"}
+          <strong>Email:</strong> {displayEmail ?? "(not signed in)"}
         </p>
-        {detectedEmail && (
+        {displayEmail && (
           <p>
-            <strong>Display name:</strong> {detectedEmail.split("@")[0]}
+            <strong>Display name:</strong> {displayEmail.split("@")[0]}
           </p>
         )}
         <div className="inline-actions" style={{ marginTop: "0.75rem" }}>
@@ -131,7 +144,7 @@ export function ProfileView({ onNavigate }) {
             type="button"
             className="btn bad"
             onClick={handleSignOut}
-            disabled={signingOut || (!detectedEmail && !window?.supabase?.auth?.signOut)}
+            disabled={signingOut || (!displayEmail && typeof authSignOut !== "function")}
           >
             {signingOut ? "Signing out…" : "Sign out"}
           </button>
