@@ -58,11 +58,21 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
           </div>
 
           <div className="topbar-actions">
+            {/* Theme toggle moved to left of profile button */}
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={onToggleTheme}
+              title="Toggle dark mode"
+              aria-label="Toggle dark mode"
+              style={{ marginRight: "0.75rem" }}
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+
             {!loading && (
               user ? (
-                  <div className="auth-user" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    {/* Theme toggle moved to left of profile button */}
-                  
+                <div className="auth-user" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     {/* Profile button: avatar + display name */}
                     {(() => {
                       const email = typeof user?.email === "string" ? user.email : null;
@@ -84,7 +94,7 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
                               gap: "0.6rem",
                               padding: "0.4rem 0.6rem",
                               borderRadius: 10,
-                              minWidth: 160,
+                              minWidth: 220,
                             }}
                             title={title}
                           >
@@ -100,7 +110,7 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
                           </button>
 
                           {accountOpen && (
-                            <div className="account-dropdown" role="menu" style={{ position: "absolute", right: 0, marginTop: "0.5rem", background: "var(--panel-bg, #fff)", boxShadow: "0 6px 18px rgba(0,0,0,0.12)", borderRadius: 8, padding: "0.5rem", zIndex: 200, minWidth: 200 }}>
+                            <div className="account-dropdown" role="menu" style={{ position: "absolute", right: 0, marginTop: "0.5rem", background: "var(--panel-bg, #fff)", boxShadow: "0 6px 18px rgba(0,0,0,0.12)", borderRadius: 8, padding: "0.5rem", zIndex: 200, minWidth: 240 }}>
                               <button type="button" className="btn" style={{ display: "block", width: "100%", textAlign: "left" }} onClick={() => { setAccountOpen(false); onNavigate("profile"); window.location.hash = "#profile"; }}>
                                 Profile
                               </button>

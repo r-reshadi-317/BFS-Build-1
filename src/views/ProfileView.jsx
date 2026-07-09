@@ -156,6 +156,25 @@ export function ProfileView({ onNavigate }) {
     }
   }
 
+  function handleAvatarFileChange(e) {
+    const f = e.target?.files?.[0];
+    if (!f) return;
+    // Simple size guard (5MB)
+    if (f.size > 5 * 1024 * 1024) {
+      setProfileMessage({ type: "error", text: "Image too large (max 5MB)" });
+      setTimeout(() => setProfileMessage(null), 3000);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      const dataUrl = ev.target?.result;
+      if (typeof dataUrl === "string") {
+        setEditingAvatar(dataUrl);
+      }
+    };
+    reader.readAsDataURL(f);
+  }
+
   return (
     <section className="view active">
       <PageHeader activeSetName="" title="Profile" lead="Account information and overall progress" />
@@ -180,6 +199,11 @@ export function ProfileView({ onNavigate }) {
           <label style={{ display: "block", marginBottom: "0.5rem" }}>
             Avatar URL
             <input type="url" value={editingAvatar} onChange={(e) => setEditingAvatar(e.target.value)} placeholder="https://...jpg" />
+          </label>
+
+          <label style={{ display: "block", marginBottom: "0.5rem" }}>
+            Or upload an image
+            <input type="file" accept="image/*" onChange={(e) => handleAvatarFileChange(e)} />
           </label>
 
           {editingAvatar && (
