@@ -1,15 +1,44 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "../components/PageHeader.jsx";
-import { loadProgressBySet, loadSetsFromStorage } from "../storage/studyStorage.js";
+import { useStudySets } from "../hooks/useStudySets.js";
+
+const PROGRESS_KEY_V1 = "fbla-bfs-progress-v1";
+const PROGRESS_KEY = "fbla-bfs-progress-v2";
 
 export function ProfileView({ onNavigate }) {
+  const { sets } = useStudySets();
   const [progressTotals, setProgressTotals] = useState({ totalAnswered: 0, totalCorrect: 0, bookmarks: 0, flashKnown: 0, flashReview: 0 });
   const [setsCount, setSetsCount] = useState({ total: 0, custom: 0 });
   const [signingOut, setSigningOut] = useState(false);
   const [detectedEmail, setDetectedEmail] = useState(null);
 
   useEffect(() => {
-    const bySet = loadProgressBySet();
+    // load progress by set (migrate v1 if present)
+    function migrateV1Progress() {
+      try {
+        const v1 = JSON.parse(localStorage.getItem(PROGRESS_KEY_V1));
+        if (!v1) return null;
+        const bySet = { "fbla-bfs-default": { ...v1 } };
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify({ bySet }));
+        return bySet;
+      } catch {
+        return null;
+      }
+    }
+
+    function loadBySet() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(PROGRESS_KEY));
+        if (raw?.bySet) return raw.bySet;
+      } catch {
+        /* ignore */
+      }
+      const migrated = migrateV1Progress();
+      if (migrated) return migrated;
+      return {};
+    }
+
+    const bySet = loadBySet();
     const totals = { totalAnswered: 0, totalCorrect: 0, bookmarks: 0, flashKnown: 0, flashReview: 0 };
     Object.values(bySet).forEach((p) => {
       totals.totalAnswered += Number(p.totalAnswered || 0);
@@ -20,7 +49,6 @@ export function ProfileView({ onNavigate }) {
     });
     setProgressTotals(totals);
 
-    const sets = loadSetsFromStorage();
     const custom = sets.filter((s) => !s.isBuiltIn).length;
     setSetsCount({ total: sets.length, custom });
 
@@ -56,7 +84,7 @@ export function ProfileView({ onNavigate }) {
         /* ignore */
       }
     }
-  }, []);
+  }, [sets]);
 
   async function handleSignOut() {
     setSigningOut(true);
