@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthProvider.jsx";
+import { AuthModal } from "./AuthModal.jsx";
 
 const NAV_ITEMS = [
   { id: "home", label: "Home", icon: "🏠" },
@@ -17,6 +19,9 @@ const NAV_ITEMS = [
 
 export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     setMenuOpen(false);
@@ -33,56 +38,79 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
   }
 
   return (
-    <header className="topbar">
-      <div className="topbar-row">
-        <button
-          type="button"
-          className="menu-toggle"
-          onClick={() => setMenuOpen((o) => !o)}
-          aria-expanded={menuOpen}
-          aria-label="Toggle navigation menu"
-        >
-          <span className="menu-icon" />
-        </button>
+    <>
+      <header className="topbar">
+        <div className="topbar-row">
+          <button
+            type="button"
+            className="menu-toggle"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-expanded={menuOpen}
+            aria-label="Toggle navigation menu"
+          >
+            <span className="menu-icon" />
+          </button>
 
-        <div className="brand">
-          <span className="logo" aria-hidden="true">🏦</span>
-          <span className="brand-text">Set Study</span>
+          <div className="brand">
+            <span className="logo" aria-hidden="true">🏦</span>
+            <span className="brand-text">Set Study</span>
+          </div>
+
+          <div className="topbar-actions">
+            {!loading && (
+              user ? (
+                <div className="auth-user">
+                  <span className="auth-user-label" title={user.email}>
+                    {user.email.split("@")[0]}
+                  </span>
+                  <button type="button" className="btn btn-sm auth-btn" onClick={() => { window.location.hash = "#profile"; onNavigate("profile"); }}>
+                    Account
+                  </button>
+                </div>
+              ) : (
+                <button type="button" className="btn btn-sm primary auth-btn" onClick={() => setAuthOpen(true)}>
+                  Sign in
+                </button>
+              )
+            )}
+
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={onToggleTheme}
+              title="Toggle dark mode"
+              aria-label="Toggle dark mode"
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+          </div>
         </div>
 
-        <button
-          type="button"
-          className="theme-toggle"
-          onClick={onToggleTheme}
-          title="Toggle dark mode"
-          aria-label="Toggle dark mode"
-        >
-          {theme === "dark" ? "☀️" : "🌙"}
-        </button>
-      </div>
+        <nav className={`main-nav ${menuOpen ? "open" : ""}`} aria-label="Main navigation">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`nav-btn ${currentView === item.id ? "active" : ""}`}
+              onClick={() => handleNavigate(item.id)}
+            >
+              <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
 
-      <nav className={`main-nav ${menuOpen ? "open" : ""}`} aria-label="Main navigation">
-        {NAV_ITEMS.map((item) => (
+        {menuOpen && (
           <button
-            key={item.id}
             type="button"
-            className={`nav-btn ${currentView === item.id ? "active" : ""}`}
-            onClick={() => handleNavigate(item.id)}
-          >
-            <span className="nav-icon" aria-hidden="true">{item.icon}</span>
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </nav>
+            className="nav-backdrop"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Close menu"
+          />
+        )}
+      </header>
 
-      {menuOpen && (
-        <button
-          type="button"
-          className="nav-backdrop"
-          onClick={() => setMenuOpen(false)}
-          aria-label="Close menu"
-        />
-      )}
-    </header>
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+    </>
   );
 }

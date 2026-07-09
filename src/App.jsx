@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { AuthProvider } from "./context/AuthProvider.jsx";
 import { useStudySets } from "./hooks/useStudySets.js";
 import { useProgress } from "./hooks/useProgress.js";
 import { useTheme } from "./hooks/useTheme.js";
@@ -46,20 +47,21 @@ export default function App() {
   }, []);
 
   return (
-    <>
-      <Header
-        currentView={currentView}
-        onNavigate={navigate}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-      />
+    <AuthProvider>
+      <>
+        <Header
+          currentView={currentView}
+          onNavigate={navigate}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+        />
 
-      <ActiveSetBar
-        activeSet={activeSet}
-        onManageSets={() => navigate("study-sets")}
-      />
+        <ActiveSetBar
+          activeSet={activeSet}
+          onManageSets={() => navigate("study-sets")}
+        />
 
-      <main id="app">
+        <main id="app">
         {currentView === "home" && (
           <HomeView
             activeSetName={activeSetName}
@@ -180,5 +182,6 @@ export default function App() {
 
       <Footer />
     </>
+    </AuthProvider>
   );
 }
