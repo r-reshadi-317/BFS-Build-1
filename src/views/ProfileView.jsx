@@ -112,15 +112,20 @@ export function ProfileView({ onNavigate }) {
       <div className="panel">
         <h3>Account</h3>
         <p>
-          <strong>Email:</strong> {user?.email ?? "(not signed in)"}
+          <strong>Email:</strong> {detectedEmail ?? "(not signed in)"}
         </p>
-        {user && (
+        {detectedEmail && (
           <p>
-            <strong>Display name:</strong> {user.user_metadata?.full_name ?? user.email.split("@")[0]}
+            <strong>Display name:</strong> {detectedEmail.split("@")[0]}
           </p>
         )}
         <div className="inline-actions" style={{ marginTop: "0.75rem" }}>
-          <button type="button" className="btn bad" onClick={handleSignOut} disabled={signingOut || !user}>
+          <button
+            type="button"
+            className="btn bad"
+            onClick={handleSignOut}
+            disabled={signingOut || (!detectedEmail && !window?.supabase?.auth?.signOut)}
+          >
             {signingOut ? "Signing out…" : "Sign out"}
           </button>
           <button type="button" className="btn" onClick={() => onNavigate?.("study-sets")}>
