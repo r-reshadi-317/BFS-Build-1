@@ -60,35 +60,56 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
           <div className="topbar-actions">
             {!loading && (
               user ? (
-                <div className="auth-user">
+                  <div className="auth-user" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    {/* Theme toggle moved to left of profile button */}
+                  
+                    {/* Profile button: avatar + display name */}
                     {(() => {
                       const email = typeof user?.email === "string" ? user.email : null;
                       const isEmail = email && email.length < 128 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-                      const label = isEmail ? email.split("@")[0] : (user?.user_metadata?.full_name || "Account");
+                      const nameLabel = isEmail ? email.split("@")[0] : (user?.user_metadata?.full_name || "Account");
+                      const avatar = user?.user_metadata?.avatar_url;
                       const title = isEmail ? email : undefined;
+
                       return (
-                        <>
-                          <span className="auth-user-label" title={title} onClick={() => setAccountOpen((s) => !s)} style={{ cursor: "pointer" }}>
-                            {label}
-                          </span>
+                        <div style={{ position: "relative" }}>
+                          <button
+                            type="button"
+                            className="profile-btn btn"
+                            onClick={() => setAccountOpen((s) => !s)}
+                            aria-expanded={accountOpen}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.6rem",
+                              padding: "0.4rem 0.6rem",
+                              borderRadius: 10,
+                              minWidth: 160,
+                            }}
+                            title={title}
+                          >
+                            <span style={{ width: 36, height: 36, display: "inline-block", borderRadius: 8, overflow: "hidden", background: "#f3f6fb" }}>
+                              {avatar ? (
+                                // eslint-disable-next-line jsx-a11y/img-redundant-alt
+                                <img src={avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              ) : (
+                                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>🙂</span>
+                              )}
+                            </span>
+                            <span style={{ fontWeight: 600 }}>{nameLabel}</span>
+                          </button>
 
-                          <div style={{ position: "relative", display: "inline-block", marginLeft: "0.5rem" }}>
-                            <button type="button" className="btn btn-sm auth-btn" onClick={() => setAccountOpen((s) => !s)} aria-expanded={accountOpen}>
-                              Account
-                            </button>
-
-                            {accountOpen && (
-                              <div className="account-dropdown" role="menu" style={{ position: "absolute", right: 0, marginTop: "0.5rem", background: "var(--panel-bg, #fff)", boxShadow: "0 6px 18px rgba(0,0,0,0.12)", borderRadius: 6, padding: "0.5rem", zIndex: 200 }}>
-                                <button type="button" className="btn" style={{ display: "block", width: "100%", textAlign: "left" }} onClick={() => { setAccountOpen(false); onNavigate("profile"); window.location.hash = "#profile"; }}>
-                                  Profile
-                                </button>
-                                <button type="button" className="btn" style={{ display: "block", width: "100%", textAlign: "left", marginTop: "0.25rem" }} onClick={async () => { setAccountOpen(false); try { await signOut(); } catch {} }}>
-                                  Sign out
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </>
+                          {accountOpen && (
+                            <div className="account-dropdown" role="menu" style={{ position: "absolute", right: 0, marginTop: "0.5rem", background: "var(--panel-bg, #fff)", boxShadow: "0 6px 18px rgba(0,0,0,0.12)", borderRadius: 8, padding: "0.5rem", zIndex: 200, minWidth: 200 }}>
+                              <button type="button" className="btn" style={{ display: "block", width: "100%", textAlign: "left" }} onClick={() => { setAccountOpen(false); onNavigate("profile"); window.location.hash = "#profile"; }}>
+                                Profile
+                              </button>
+                              <button type="button" className="btn" style={{ display: "block", width: "100%", textAlign: "left", marginTop: "0.25rem" }} onClick={async () => { setAccountOpen(false); try { await signOut(); } catch {} }}>
+                                Sign out
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       );
                     })()}
                   </div>
@@ -105,6 +126,7 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
               onClick={onToggleTheme}
               title="Toggle dark mode"
               aria-label="Toggle dark mode"
+              style={{ marginRight: "0.5rem" }}
             >
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
