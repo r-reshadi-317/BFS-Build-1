@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "../components/PageHeader.jsx";
-import { useAuth } from "../context/AuthProvider.jsx";
 import { loadProgressBySet, loadSetsFromStorage } from "../storage/studyStorage.js";
 
 export function ProfileView({ onNavigate }) {
-  const { user, signOut } = useAuth();
   const [progressTotals, setProgressTotals] = useState({ totalAnswered: 0, totalCorrect: 0, bookmarks: 0, flashKnown: 0, flashReview: 0 });
   const [setsCount, setSetsCount] = useState({ total: 0, custom: 0 });
   const [signingOut, setSigningOut] = useState(false);
+  const [detectedEmail, setDetectedEmail] = useState(null);
 
   useEffect(() => {
     const bySet = loadProgressBySet();
@@ -24,15 +23,55 @@ export function ProfileView({ onNavigate }) {
     const sets = loadSetsFromStorage();
     const custom = sets.filter((s) => !s.isBuiltIn).length;
     setSetsCount({ total: sets.length, custom });
+
+    // Try to detect an email in localStorage if an auth system stored it
+    const possible = [
+      "user_email",
+      "email",
+      "auth_email",
+      "sb:email",
+      "supabase.auth.token",
+      "supabase.auth.user",
+    ];
+    for (const k of possible) {
+      try {
+        const v = localStorage.getItem(k);
+        if (!v) continue;
+        // If looks like an email
+        if (/@/.test(v)) {
+          setDetectedEmail(v);
+          break;
+        }
+        // try parsing JSON
+        try {
+          const j = JSON.parse(v);
+          if (j?.email) {
+            setDetectedEmail(j.email);
+            break;
+          }
+        } catch (e) {
+          /* ignore */
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    }
   }, []);
 
   async function handleSignOut() {
     setSigningOut(true);
     try {
-      await signOut();
-      onNavigate?.("home");
-    } catch (err) {
-      // ignore — Auth modal / higher level handles errors
+      // If a global supabase client exists, try to sign out through it
+      if (window?.supabase?.auth?.signOut) {
+        try { await window.supabase.auth.signOut(); } catch (e) { /* ignore */ }
+      }
+
+      // Remove common localStorage auth keys as a fallback
+      const keys = Object.keys(localStorage).filter((k) => /auth|supabase|session|token|sb-|user/i.test(k));
+      keys.forEach((k) => localStorage.removeItem(k));
+
+      // Reload to reflect signed-out state
+      window.location.reload();
     } finally {
       setSigningOut(false);
     }
