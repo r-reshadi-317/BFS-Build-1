@@ -8,11 +8,16 @@ const PROGRESS_KEY = "fbla-bfs-progress-v2";
 
 export function ProfileView({ onNavigate }) {
   const { sets } = useStudySets();
-  const { user: authUser, signOut: authSignOut } = useAuth();
+  const { user: authUser, signOut: authSignOut, updateProfile } = useAuth();
   const [progressTotals, setProgressTotals] = useState({ totalAnswered: 0, totalCorrect: 0, bookmarks: 0, flashKnown: 0, flashReview: 0 });
   const [setsCount, setSetsCount] = useState({ total: 0, custom: 0 });
   const [signingOut, setSigningOut] = useState(false);
   const [detectedEmail, setDetectedEmail] = useState(null);
+
+  const [editingName, setEditingName] = useState("");
+  const [editingAvatar, setEditingAvatar] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState(null);
 
   useEffect(() => {
     // load progress by set (migrate v1 if present)
@@ -125,6 +130,32 @@ export function ProfileView({ onNavigate }) {
 
   const displayEmail = authUser?.email ?? detectedEmail;
 
+  // Populate editing fields from existing metadata when available
+  useEffect(() => {
+    const meta = authUser?.user_metadata ?? (() => {
+      try {
+        const raw = localStorage.getItem("user_profile");
+        return raw ? JSON.parse(raw) : null;
+      } catch { return null; }
+    })();
+    setEditingName(meta?.full_name || authUser?.email?.split("@")[0] || "");
+    setEditingAvatar(meta?.avatar_url || "");
+  }, [authUser]);
+
+  async function handleSaveProfile() {
+    setProfileSaving(true);
+    setProfileMessage(null);
+    try {
+      const result = await updateProfile({ full_name: editingName || null, avatar_url: editingAvatar || null });
+      setProfileMessage({ type: "success", text: "Profile saved" });
+    } catch (e) {
+      setProfileMessage({ type: "error", text: e?.message || String(e) });
+    } finally {
+      setProfileSaving(false);
+      setTimeout(() => setProfileMessage(null), 3000);
+    }
+  }
+
   return (
     <section className="view active">
       <PageHeader activeSetName="" title="Profile" lead="Account information and overall progress" />
@@ -136,9 +167,44 @@ export function ProfileView({ onNavigate }) {
         </p>
         {displayEmail && (
           <p>
-            <strong>Display name:</strong> {displayEmail.split("@")[0]}
+            <strong>Display name:</strong> {(authUser?.user_metadata?.full_name) || displayEmail.split("@")[0]}
           </p>
         )}
+
+        <div style={{ marginTop: "0.75rem" }}>
+          <label style={{ display: "block", marginBottom: "0.5rem" }}>
+            Full name
+            <input type="text" value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="Your display name" />
+          </label>
+
+          <label style={{ display: "block", marginBottom: "0.5rem" }}>
+            Avatar URL
+            <input type="url" value={editingAvatar} onChange={(e) => setEditingAvatar(e.target.value)} placeholder="https://...jpg" />
+          </label>
+
+          {editingAvatar && (
+            <div style={{ marginBottom: "0.5rem" }}>
+              <img src={editingAvatar} alt="avatar preview" style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8 }} />
+            </div>
+          )}
+
+          <div className="inline-actions" style={{ marginTop: "0.25rem" }}>
+            <button type="button" className="btn primary" onClick={handleSaveProfile} disabled={profileSaving}>
+              {profileSaving ? "Saving…" : "Save profile"}
+            </button>
+            <button type="button" className="btn" onClick={() => { setEditingName(""); setEditingAvatar(""); }} disabled={profileSaving}>
+              Reset
+            </button>
+          </div>
+
+          {profileMessage && (
+            <div className={`status-banner ${profileMessage.type === "error" ? "bad" : "ok"}`} style={{ marginTop: "0.5rem" }}>
+              {profileMessage.text}
+            </div>
+          )}
+
+        </div>
+
         <div className="inline-actions" style={{ marginTop: "0.75rem" }}>
           <button
             type="button"

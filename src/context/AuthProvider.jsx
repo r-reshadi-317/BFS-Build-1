@@ -89,17 +89,48 @@ export function AuthProvider({ children }) {
     // fallback: remove user_email marker
     try {
       localStorage.removeItem("user_email");
+      localStorage.removeItem("user_profile");
       setUser(null);
     } catch (e) {
       // ignore
     }
   }, []);
 
+  const updateProfile = useCallback(async ({ full_name, avatar_url }) => {
+    // If supabase client provides an update user API, use it
+    if (window?.supabase?.auth?.updateUser) {
+      try {
+        const { data, error } = await window.supabase.auth.updateUser({ data: { full_name, avatar_url } });
+        if (error) throw error;
+        // supabase returns { data: { user } } shape in some versions
+        const updatedUser = data?.user ?? data?.session?.user ?? data ?? null;
+        if (updatedUser) {
+          setUser(updatedUser);
+        }
+        return updatedUser;
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    // Fallback: persist small profile blob locally and update in-memory
+    try {
+      const email = (user && user.email) || localStorage.getItem("user_email") || null;
+      const newUser = { email, user_metadata: { full_name, avatar_url } };
+      localStorage.setItem("user_profile", JSON.stringify(newUser.user_metadata));
+      setUser(newUser);
+      return newUser;
+    } catch (e) {
+      throw e;
+    }
+  }, [user]);
+
   const value = {
     user,
     loading,
     signIn,
     signOut,
+    updateProfile,
     isConfigured: Boolean(window?.supabase),
   };
 

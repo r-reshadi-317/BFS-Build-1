@@ -21,7 +21,8 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
+  const [accountOpen, setAccountOpen] = useState(false);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -67,12 +68,26 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
                       const title = isEmail ? email : undefined;
                       return (
                         <>
-                          <span className="auth-user-label" title={title}>
+                          <span className="auth-user-label" title={title} onClick={() => setAccountOpen((s) => !s)} style={{ cursor: "pointer" }}>
                             {label}
                           </span>
-                          <button type="button" className="btn btn-sm auth-btn" onClick={() => { window.location.hash = "#profile"; onNavigate("profile"); }}>
-                            Account
-                          </button>
+
+                          <div style={{ position: "relative", display: "inline-block", marginLeft: "0.5rem" }}>
+                            <button type="button" className="btn btn-sm auth-btn" onClick={() => setAccountOpen((s) => !s)} aria-expanded={accountOpen}>
+                              Account
+                            </button>
+
+                            {accountOpen && (
+                              <div className="account-dropdown" role="menu" style={{ position: "absolute", right: 0, marginTop: "0.5rem", background: "var(--panel-bg, #fff)", boxShadow: "0 6px 18px rgba(0,0,0,0.12)", borderRadius: 6, padding: "0.5rem", zIndex: 200 }}>
+                                <button type="button" className="btn" style={{ display: "block", width: "100%", textAlign: "left" }} onClick={() => { setAccountOpen(false); onNavigate("profile"); window.location.hash = "#profile"; }}>
+                                  Profile
+                                </button>
+                                <button type="button" className="btn" style={{ display: "block", width: "100%", textAlign: "left", marginTop: "0.25rem" }} onClick={async () => { setAccountOpen(false); try { await signOut(); } catch {} }}>
+                                  Sign out
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </>
                       );
                     })()}
