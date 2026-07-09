@@ -88,6 +88,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signIn = useCallback(async (email, password) => {
+    // Modern Supabase client
     if (window?.supabase?.auth?.signInWithPassword) {
       const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -95,10 +96,29 @@ export function AuthProvider({ children }) {
       return data;
     }
 
+    // Older Supabase clients may expose auth.signIn
+    if (window?.supabase?.auth?.signIn) {
+      try {
+        const res = await window.supabase.auth.signIn({ email, password });
+        // older versions return { user, error } or { data, error }
+        const err = res?.error ?? res?.data?.error;
+        if (err) throw err;
+        const u = res?.user ?? res?.data?.user ?? res?.data ?? null;
+        setUser(u);
+        return res;
+      } catch (e) {
+        throw e;
+      }
+    }
+
     // fallback: store a lightweight marker so ProfileView can detect email
-    localStorage.setItem("user_email", email);
-    setUser({ email, user_metadata: {} });
-    return { user: { email } };
+    try {
+      localStorage.setItem("user_email", email);
+      setUser({ email, user_metadata: {} });
+      return { user: { email } };
+    } catch (e) {
+      throw e;
+    }
   }, []);
 
   const signOut = useCallback(async () => {
