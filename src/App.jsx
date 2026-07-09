@@ -17,6 +17,7 @@ import { ReviewView } from "./views/ReviewView.jsx";
 import { BookmarksView } from "./views/BookmarksView.jsx";
 import { StatsView } from "./views/StatsView.jsx";
 import { StudySetsView } from "./views/StudySetsView.jsx";
+import { StudySetCreatorView } from "./views/StudySetCreatorView.jsx";
 
 export default function App() {
   const [syncVersion, setSyncVersion] = useState(0);
@@ -55,7 +56,7 @@ export default function App() {
 }
 
 function StudyApp({ syncVersion, setsRef, activeSetIdRef, scheduleSyncRef, onDataChange }) {
-  const { sets, activeSet, activeSetId, selectSet, importFromJson, deleteSet } = useStudySets({
+  const { sets, activeSet, activeSetId, selectSet, importFromJson, createSet, deleteSet, updateSet } = useStudySets({
     syncVersion,
     onDataChange,
   });
@@ -71,7 +72,17 @@ function StudyApp({ syncVersion, setsRef, activeSetIdRef, scheduleSyncRef, onDat
   const { theme, toggleTheme } = useTheme();
   const [currentView, setCurrentView] = useState("home");
   const [pendingStudyId, setPendingStudyId] = useState(null);
+  const [creatorSetId, setCreatorSetId] = useState(null);
 
+  const handleEditInCreator = useCallback((setId) => {
+    setCreatorSetId(setId);
+    setCurrentView("study-set-creator");
+  }, []);
+
+  const handleExitCreator = useCallback(() => {
+    setCreatorSetId(null);
+  }, []);
+ 
   const activeSetName = activeSet.name;
   const accuracy = progress.totalAnswered
     ? Math.round((progress.totalCorrect / progress.totalAnswered) * 100)
@@ -79,6 +90,9 @@ function StudyApp({ syncVersion, setsRef, activeSetIdRef, scheduleSyncRef, onDat
 
   const navigate = useCallback((viewId) => {
     setCurrentView(viewId);
+    if (viewId !== "study-set-creator") {
+      setCreatorSetId(null);
+    }
   }, []);
 
   const openStudySection = useCallback((sectionId) => {
@@ -125,11 +139,25 @@ function StudyApp({ syncVersion, setsRef, activeSetIdRef, scheduleSyncRef, onDat
             activeSetId={activeSetId}
             selectSet={selectSet}
             importFromJson={importFromJson}
+            updateSet={updateSet}
             deleteSet={deleteSet}
             deleteProgressForSet={deleteProgressForSet}
+            onEditInCreator={handleEditInCreator}
           />
         )}
 
+        {currentView === "study-set-creator" && (
+          <StudySetCreatorView
+            initialSet={sets.find((s) => s.id === creatorSetId) ?? null}
+            createSet={createSet}
+            updateSet={updateSet}
+            onCancelEdit={() => {
+              handleExitCreator();
+              setCurrentView("study-sets");
+            }}
+          />
+        )}
+ 
         {currentView === "study" && (
           <StudyView
             key={activeSetId}

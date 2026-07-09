@@ -450,6 +450,25 @@ h3 {
   box-shadow: var(--shadow);
 }
 
+.edit-panel {
+  margin-top: 1.5rem;
+}
+
+.json-editor {
+  width: 100%;
+  min-height: 360px;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  resize: vertical;
+  margin-top: 0.75rem;
+}
+
 .setup-panel h3 {
   margin-top: 0;
 }

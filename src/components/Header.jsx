@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { id: "search", label: "Search", icon: "🔍" },
   { id: "review", label: "Review", icon: "↩️" },
   { id: "bookmarks", label: "Bookmarks", icon: "⭐" },
+  { id: "study-set-creator", label: "Study Set Creator", icon: "🛠️" },
   { id: "stats", label: "Statistics", icon: "📈" },
 ];
 

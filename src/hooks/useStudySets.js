@@ -84,6 +84,29 @@ export function useStudySets({ syncVersion = 0, onDataChange } = {}) {
     return addSet(normalized, options);
   }, [addSet]);
 
+  const createSet = useCallback((normalized, options = {}) => {
+    return addSet(normalized, options);
+  }, [addSet]);
+
+  const updateSet = useCallback((id, normalized) => {
+    setSets((prev) => {
+      const next = prev.map((set) => (
+        set.id === id
+          ? {
+            ...set,
+            ...normalized,
+            id: set.id,
+            isBuiltIn: false,
+            createdAt: set.createdAt ?? Date.now(),
+          }
+          : set
+      ));
+      persistSets(next);
+      notifyChange(next, activeSetId);
+      return next;
+    });
+  }, [activeSetId, notifyChange]);
+
   const deleteSet = useCallback((id) => {
     const target = sets.find((s) => s.id === id);
     if (!target || target.isBuiltIn) return false;
@@ -109,6 +132,8 @@ export function useStudySets({ syncVersion = 0, onDataChange } = {}) {
     activeSetId,
     selectSet,
     importFromJson,
+    createSet,
     deleteSet,
+    updateSet,
   };
 }
