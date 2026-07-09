@@ -65,20 +65,27 @@ export function ProfileView({ onNavigate }) {
       try {
         const v = localStorage.getItem(k);
         if (!v) continue;
-        // If looks like an email
-        if (/@/.test(v)) {
-          setDetectedEmail(v);
-          break;
-        }
-        // try parsing JSON
+
+        // Try parse JSON first
         try {
           const j = JSON.parse(v);
-          if (j?.email) {
+          if (j?.email && typeof j.email === "string") {
             setDetectedEmail(j.email);
             break;
           }
+          if (j?.user?.email && typeof j.user.email === "string") {
+            setDetectedEmail(j.user.email);
+            break;
+          }
         } catch (e) {
-          /* ignore */
+          // not JSON
+        }
+
+        // If v itself looks exactly like an email address, and not too large, use it
+        const possibleEmail = String(v).trim();
+        if (possibleEmail.length < 128 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(possibleEmail)) {
+          setDetectedEmail(possibleEmail);
+          break;
         }
       } catch (e) {
         /* ignore */

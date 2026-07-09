@@ -23,23 +23,33 @@ export function AuthProvider({ children }) {
             try {
               const v = localStorage.getItem(k);
               if (!v) continue;
-              if (/@/.test(v)) {
-                setUser({ email: v, user_metadata: {} });
-                break;
-              }
+
+            // Prefer JSON with an email property
+            try {
               const j = JSON.parse(v);
               if (j?.user?.email) {
                 setUser(j.user);
                 break;
               }
-              if (j?.email) {
+              if (j?.email && typeof j.email === "string") {
                 setUser({ email: j.email, user_metadata: j.user_metadata ?? {} });
                 break;
               }
-            } catch {
-              // ignore
+            } catch (e) {
+              // not JSON — fall back to raw email detection below
             }
+
+            // If v itself looks exactly like an email address, use it. Avoid matching large blobs.
+            const possibleEmail = String(v).trim();
+            if (possibleEmail.length < 128 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(possibleEmail)) {
+              setUser({ email: possibleEmail, user_metadata: {} });
+              break;
+            }
+
+          } catch {
+            // ignore
           }
+        }
         }
       } catch (e) {
         // ignore
