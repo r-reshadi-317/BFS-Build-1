@@ -104,6 +104,12 @@ body {
   cursor: pointer;
   flex-shrink: 0;
 }
+ 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
 .menu-icon {
   display: block;

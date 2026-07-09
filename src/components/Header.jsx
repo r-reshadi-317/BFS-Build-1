@@ -76,8 +76,9 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
                     {/* Profile button: avatar + display name */}
                     {(() => {
                       const email = typeof user?.email === "string" ? user.email : null;
-                      const nameLabel = (user?.user_metadata?.full_name && String(user.user_metadata.full_name).trim()) || (email ? email.split("@")[0] : "Account");
-                      const avatar = user?.user_metadata?.avatar_url;
+                      const meta = user?.user_metadata || {};
+                      const nameLabel = (meta.full_name || meta.fullName || meta.name || meta.display_name || meta.username) ? String(meta.full_name || meta.fullName || meta.name || meta.display_name || meta.username).trim() : (email ? email.split("@")[0] : "Account");
+                      const avatar = meta.avatar_url || meta.avatarUrl || meta.avatar || null;
                       const title = email && email.length < 128 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : undefined;
 
                       return (
