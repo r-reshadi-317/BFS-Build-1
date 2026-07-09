@@ -5,12 +5,24 @@ import { unique } from "../utils/helpers.js";
 export function FlashcardsView({ activeSetName, flashcards, progress, saveProgress }) {
   const tags = unique(flashcards.flatMap((c) => c.tags)).sort();
   const [tag, setTag] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
 
-  const deck = tag === "all"
+  // filter by tag and by known/review/unmarked status
+  const deckByTag = tag === "all"
     ? flashcards
     : flashcards.filter((c) => c.tags.includes(tag));
+
+  const deck = deckByTag.filter((c) => {
+    if (statusFilter === "all") return true;
+    const isKnown = Array.isArray(progress?.flashKnown) && progress.flashKnown.includes(c.id);
+    const isReview = Array.isArray(progress?.flashReview) && progress.flashReview.includes(c.id);
+    if (statusFilter === "known") return isKnown;
+    if (statusFilter === "review") return isReview;
+    if (statusFilter === "unmarked") return !isKnown && !isReview;
+    return true;
+  });
 
   const card = deck[index];
 
@@ -74,15 +86,27 @@ export function FlashcardsView({ activeSetName, flashcards, progress, saveProgre
     <section className="view active">
       <PageHeader activeSetName={activeSetName} title="Flashcards" />
 
-      <label className="filter-label">
-        Filter by tag
-        <select value={tag} onChange={handleTagChange}>
-          <option value="all">All</option>
-          {tags.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-      </label>
+      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <label className="filter-label" style={{ marginBottom: 0 }}>
+          Filter by tag
+          <select value={tag} onChange={handleTagChange}>
+            <option value="all">All</option>
+            {tags.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-label" style={{ marginBottom: 0 }}>
+          Filter by status
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setIndex(0); setFlipped(false); }}>
+            <option value="all">All</option>
+            <option value="known">Known</option>
+            <option value="review">Review</option>
+            <option value="unmarked">Unmarked</option>
+          </select>
+        </label>
+      </div>
 
       <div className="flashcard-stage">
         {!card ? (
@@ -98,10 +122,24 @@ export function FlashcardsView({ activeSetName, flashcards, progress, saveProgre
             <div className="flashcard-inner">
               <div className="flashcard-face flashcard-front">
                 <small>{index + 1} / {deck.length}</small>
+                {(() => {
+                  const isKnown = Array.isArray(progress?.flashKnown) && progress.flashKnown.includes(card.id);
+                  const isReview = Array.isArray(progress?.flashReview) && progress.flashReview.includes(card.id);
+                  if (isKnown) return <span className="flash-status-badge known">Known</span>;
+                  if (isReview) return <span className="flash-status-badge review">Review</span>;
+                  return null;
+                })()}
                 <p>{card.front}</p>
               </div>
               <div className="flashcard-face flashcard-back">
                 <small>{index + 1} / {deck.length}</small>
+                {(() => {
+                  const isKnown = Array.isArray(progress?.flashKnown) && progress.flashKnown.includes(card.id);
+                  const isReview = Array.isArray(progress?.flashReview) && progress.flashReview.includes(card.id);
+                  if (isKnown) return <span className="flash-status-badge known">Known</span>;
+                  if (isReview) return <span className="flash-status-badge review">Review</span>;
+                  return null;
+                })()}
                 <div dangerouslySetInnerHTML={{ __html: card.back }} />
               </div>
             </div>

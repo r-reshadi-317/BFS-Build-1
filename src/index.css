@@ -884,6 +884,26 @@ input:focus {
   font-size: 0.95rem;
 }
 
+.flash-status-badge {
+  position: absolute;
+  left: 1.25rem;
+  top: 1.25rem;
+  z-index: 10;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.flash-status-badge.known {
+  background: var(--good);
+}
+
+.flash-status-badge.review {
+  background: var(--bad);
+}
+
 .flashcard-face p,
 .flashcard-face div {
   margin: 0;
