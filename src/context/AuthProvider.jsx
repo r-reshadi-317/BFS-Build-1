@@ -135,7 +135,7 @@ export function AuthProvider({ children }) {
     // fallback: remove user_email marker
     try {
       localStorage.removeItem("user_email");
-      localStorage.removeItem("user_profile");
+      // Do not remove user_profile here — preserve profile data across sign-out so users don't lose their avatar/name when using the local fallback.
       setUser(null);
     } catch (e) {
       // ignore
@@ -143,18 +143,24 @@ export function AuthProvider({ children }) {
   }, []);
 
   const updateProfile = useCallback(async ({ full_name, avatar_url }) => {
+    const metadata = { full_name, avatar_url };
+
     // If supabase client provides an update user API, use it
     if (window?.supabase?.auth?.updateUser) {
       try {
-        const { data, error } = await window.supabase.auth.updateUser({ data: { full_name, avatar_url } });
+        const { data, error } = await window.supabase.auth.updateUser({ data: metadata });
         if (error) throw error;
         // supabase returns { data: { user } } shape in some versions
         const updatedUser = data?.user ?? data?.session?.user ?? data ?? null;
         if (updatedUser) {
           setUser(updatedUser);
+          // also persist a small local copy for faster UI restore on reloads
+          try { localStorage.setItem("user_profile", JSON.stringify(updatedUser.user_metadata || metadata)); } catch (e) { /* ignore */ }
         }
         return updatedUser;
       } catch (e) {
+        // On failure, fall through to saving locally
+        try { localStorage.setItem("user_profile", JSON.stringify(metadata)); } catch (err) { /* ignore */ }
         throw e;
       }
     }
@@ -162,7 +168,7 @@ export function AuthProvider({ children }) {
     // Fallback: persist small profile blob locally and update in-memory
     try {
       const email = (user && user.email) || localStorage.getItem("user_email") || null;
-      const newUser = { email, user_metadata: { full_name, avatar_url } };
+      const newUser = { email, user_metadata: metadata };
       localStorage.setItem("user_profile", JSON.stringify(newUser.user_metadata));
       setUser(newUser);
       return newUser;
