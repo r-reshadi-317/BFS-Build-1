@@ -54,6 +54,32 @@ export function AuthProvider({ children }) {
       } catch (e) {
         // ignore
       } finally {
+        // After initial detection, check for a small locally persisted profile blob and merge it so UI stays consistent across reloads
+        try {
+          const rawProfile = localStorage.getItem("user_profile");
+          if (rawProfile) {
+            try {
+              const profile = JSON.parse(rawProfile);
+              if (profile && Object.keys(profile).length > 0) {
+                setUser((prev) => {
+                  // If we already detected a user, merge metadata; otherwise, restore minimal user using stored email marker
+                  if (prev) {
+                    return { ...prev, user_metadata: { ...(prev.user_metadata || {}), ...profile } };
+                  }
+                  const emailMarker = localStorage.getItem("user_email");
+                  if (emailMarker) {
+                    return { email: emailMarker, user_metadata: { ...profile } };
+                  }
+                  return prev;
+                });
+              }
+            } catch (e) {
+              // ignore malformed profile
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
         setLoading(false);
       }
     }
