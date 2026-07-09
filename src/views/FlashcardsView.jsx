@@ -68,6 +68,22 @@ export function FlashcardsView({ activeSetName, flashcards, progress, saveProgre
     return () => window.removeEventListener("keydown", onKey);
   }, [deck.length]);
 
+  // Ensure index is always within bounds when deck length changes (e.g., when marking cards)
+  useEffect(() => {
+    if (deck.length === 0) {
+      // keep index at 0 and reset flip state so UI shows the 'no cards' panel consistently
+      if (index !== 0) setIndex(0);
+      if (flipped) setFlipped(false);
+      return;
+    }
+
+    if (index >= deck.length) {
+      // clamp to last available card and reset flip so the user sees the front
+      setIndex(Math.max(0, deck.length - 1));
+      if (flipped) setFlipped(false);
+    }
+  }, [deck.length, index, flipped]);
+
   function markFlashcard(type) {
     if (!card) return;
     const key = type === "known" ? "flashKnown" : "flashReview";
