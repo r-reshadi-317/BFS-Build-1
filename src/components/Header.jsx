@@ -76,10 +76,9 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
                     {/* Profile button: avatar + display name */}
                     {(() => {
                       const email = typeof user?.email === "string" ? user.email : null;
-                      const isEmail = email && email.length < 128 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-                      const nameLabel = isEmail ? email.split("@")[0] : (user?.user_metadata?.full_name || "Account");
+                      const nameLabel = (user?.user_metadata?.full_name && String(user.user_metadata.full_name).trim()) || (email ? email.split("@")[0] : "Account");
                       const avatar = user?.user_metadata?.avatar_url;
-                      const title = isEmail ? email : undefined;
+                      const title = email && email.length < 128 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : undefined;
 
                       return (
                         <div style={{ position: "relative" }}>
@@ -130,16 +129,6 @@ export function Header({ currentView, onNavigate, theme, onToggleTheme }) {
                 )
               )}
 
-            <button
-              type="button"
-              className="theme-toggle"
-              onClick={onToggleTheme}
-              title="Toggle dark mode"
-              aria-label="Toggle dark mode"
-              style={{ marginRight: "0.5rem" }}
-            >
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
           </div>
         </div>
 
